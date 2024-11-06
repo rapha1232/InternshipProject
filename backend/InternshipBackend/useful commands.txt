@@ -1,0 +1,2 @@
+dotnet-ef migrations add {name} -c {context}
+dotnet-ef database update
