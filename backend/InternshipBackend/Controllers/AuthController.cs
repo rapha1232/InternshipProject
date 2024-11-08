@@ -58,8 +58,11 @@ namespace InternshipBacked.Controllers
         [ValidateModel]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
-            var identityUser = await _userManager.FindByEmailAsync(loginRequestDto.Username);
-
+            var identityUser = await _userManager.FindByEmailAsync(loginRequestDto.UserNameOrEmail);
+            if (identityUser == null)
+            {
+                identityUser = await _userManager.FindByNameAsync(loginRequestDto.UserNameOrEmail);
+            }
             if (identityUser != null)
             {
                 var passValid = await _userManager.CheckPasswordAsync(identityUser, loginRequestDto.Password);
