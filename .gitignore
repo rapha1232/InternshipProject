@@ -34,3 +34,9 @@
 # typescript
 */*.tsbuildinfo
 */next-env.d.ts
+
+*/bin/
+*/Migrations/
+*/obj/
+
+.vscode/
