@@ -1,6 +1,7 @@
+using InternshipBackend.Models.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookDBContext.Data
+namespace InternshipBacked.Data
 {
     public class BookDBContext : DbContext
     {
@@ -8,6 +9,9 @@ namespace BookDBContext.Data
         {
 
         }
+
+        public DbSet<Book> Book { get; set; }
+        public DbSet<Author> Author { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
