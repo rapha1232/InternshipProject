@@ -28,6 +28,7 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
+
 builder.Services.AddIdentityCore<IdentityUser>()
 .AddRoles<IdentityRole>()
 .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("InternshipProject")

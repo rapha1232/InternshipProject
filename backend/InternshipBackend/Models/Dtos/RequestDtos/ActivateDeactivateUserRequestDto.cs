@@ -5,15 +5,10 @@ namespace InternshipBacked.Models.DTOs
 {
     public class ActivateDeactivateUserRequestDto
     {
-        [Required(ErrorMessage = "Email is required")]
-        [DataType(DataType.EmailAddress)]
-        public required string Email { get; set; }
-
         [Required(ErrorMessage = "Lockout setting is required")]
-        [DataType(DataType.Text)]
+        [DataType(DataType.Text, ErrorMessage = "Lockout setting is not valid")]
         public bool LockoutEnabled { get; set; }
 
-        [Required(ErrorMessage = "Lockout end date is required")]
         [DataType(DataType.DateTime)]
         public DateTimeOffset? LockoutEnd { get; set; } = DateTimeOffset.Now.AddYears(1);
     }

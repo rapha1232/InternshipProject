@@ -8,7 +8,7 @@ public class Author
     public string Name { get; set; }
     public string? Biography { get; set; }
     public string? AuthorImageUrl { get; set; }
-    public List<Book> Books { get; set; }
 
-    public bool toBeShown { get; set; }
+    // Navigation property to represent one-to-many relationship with Book
+    public List<Book> Books { get; set; }
 }

@@ -82,10 +82,12 @@ namespace InternshipBacked.Controllers
                 if (roles != null)
                 {
                     var jwt = _tokenRepository.CreateJWTToken(identityUser, roles.ToList());
+                    // var refreshToken = _tokenRepository.GenerateRefreshToken();
 
                     var response = new LoginResponseDto()
                     {
-                        JwtToken = jwt
+                        JwtToken = jwt,
+                        // RefreshToken = refreshToken
                     };
 
                     return Ok(response);
@@ -93,5 +95,32 @@ namespace InternshipBacked.Controllers
             }
             return BadRequest("User was not logged in! Something went wrong!!");
         }
+
+        // [HttpPost]
+        // [Route("refresh-token")]
+        // [ValidateModel]
+        // public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto refreshTokenRequestDto)
+        // {
+        //     var principal = _tokenRepository.GetPrincipalFromExpiredToken(refreshTokenRequestDto.Token);
+        //     var username = principal.Identity.Name;
+        //     var user = await _userManager.FindByNameAsync(username);
+        //     var roles = await _userManager.GetRolesAsync(user);
+
+        //     if (user == null || refreshTokenRequestDto.RefreshToken != _tokenRepository.GetRefreshToken(user))
+        //     {
+        //         return BadRequest("Invalid refresh token!");
+        //     }
+
+        //     var jwt = _tokenRepository.CreateJWTToken(user, roles.ToList());
+        //     var newRefreshToken = _tokenRepository.GenerateRefreshToken();
+
+        //     var response = new LoginResponseDto()
+        //     {
+        //         JwtToken = jwt,
+        //         RefreshToken = newRefreshToken
+        //     };
+
+        //     return Ok(response);
+        // }
     }
 }

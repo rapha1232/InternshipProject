@@ -5,11 +5,6 @@ namespace InternshipBacked.Models.DTOs;
 
 public class ChangePasswordRequestDto
 {
-
-    [Required(ErrorMessage = "Email is required")]
-    [DataType(DataType.EmailAddress)]
-    public required string Email { get; set; }
-
     [Required(ErrorMessage = "OldPassword is required")]
     [DataType(DataType.Password)]
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters long")]

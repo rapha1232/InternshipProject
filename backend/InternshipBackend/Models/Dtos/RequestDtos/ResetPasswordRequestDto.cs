@@ -6,7 +6,7 @@ namespace InternshipBacked.Models.DTOs
     public class ResetPasswordRequestDto
     {
         [Required(ErrorMessage = "Email is required")]
-        [DataType(DataType.EmailAddress)]
+        [DataType(DataType.EmailAddress, ErrorMessage = "Email is not valid")]
         public required string Email { get; set; }
 
         [Required(ErrorMessage = "Password is required")]

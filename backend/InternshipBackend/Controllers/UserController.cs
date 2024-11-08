@@ -7,6 +7,9 @@ using InternshipBackend.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using InternshipBackend.CustomActionFilters;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Identity.Client;
+using InternshipBacked.Data;
 
 namespace InternshipBacked.Controllers
 {
@@ -16,22 +19,92 @@ namespace InternshipBacked.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly ITokenRepository _tokenRepository;
         private readonly IEmailSender _emailSender;
-        public UserController(UserManager<IdentityUser> userManager, ITokenRepository tokenRepository, IEmailSender emailSender)
+        private readonly BookDBContext _context;
+        public UserController(UserManager<IdentityUser> userManager, IEmailSender emailSender, BookDBContext context)
         {
-            this._userManager = userManager;
-            this._tokenRepository = tokenRepository;
-            this._emailSender = emailSender;
+            _userManager = userManager;
+            _emailSender = emailSender;
+            _context = context;
         }
 
-        // Change Password: User is authenticated and knows their current password
-        [HttpPost]
-        [Route("change-password")]
-        [ValidateModel]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto changePasswordRequestDto)
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsers()
         {
-            var identityUser = await _userManager.FindByEmailAsync(changePasswordRequestDto.Email);
+            var users = await _userManager.Users.ToListAsync();
+            return Ok(users);
+        }
+
+        [HttpGet]
+        [Route("{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> GetOneUser([FromRoute] Guid id, [FromQuery] string email)
+        {
+            var identityUser = await _userManager.FindByIdAsync(id.ToString());
+            if (identityUser != null)
+            {
+                return Ok(identityUser);
+            }
+            return BadRequest("User not found!");
+        }
+
+        [HttpPut]
+        [Route("update/{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> UpdateUser([FromRoute] Guid id, [FromBody] UpdateUserRequestDto updateUserRequestDto)
+        {
+            var identityUser = await _userManager.FindByIdAsync(id.ToString());
+
+            if (identityUser != null)
+            {
+                identityUser.UserName = updateUserRequestDto.UserName;
+                identityUser.Email = updateUserRequestDto.Email;
+
+                await _userManager.UpdateAsync(identityUser);
+                return Ok("User was updated successfully!");
+            }
+            return BadRequest("User was not updated! Something went wrong!!");
+        }
+
+        [HttpDelete]
+        [Route("delete/{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid id, [FromQuery] string email)
+        {
+            var identityUser = await _userManager.FindByIdAsync(id.ToString());
+
+            if (identityUser != null)
+            {
+                await _userManager.DeleteAsync(identityUser);
+                return Ok("User was deleted successfully!");
+            }
+            return BadRequest("User was not deleted! Something went wrong!!");
+        }
+
+        [HttpPut]
+        [Route("manage-activation/{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> ActivateDeactivateUser([FromRoute] Guid id, [FromBody] ActivateDeactivateUserRequestDto activateDeactivateUserRequestDto)
+        {
+            var identityUser = await _userManager.FindByIdAsync(id.ToString());
+
+            if (identityUser != null)
+            {
+                identityUser.LockoutEnabled = activateDeactivateUserRequestDto.LockoutEnabled;
+                identityUser.LockoutEnd = activateDeactivateUserRequestDto.LockoutEnd;
+
+                await _userManager.UpdateAsync(identityUser);
+                return Ok("User was activated/deactivated successfully!");
+            }
+            return BadRequest("User was not activated/deactivated! Something went wrong!!");
+        }
+
+        [HttpPut]
+        [Route("change-password/{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> ChangePassword([FromRoute] Guid id, [FromBody] ChangePasswordRequestDto changePasswordRequestDto)
+        {
+            var identityUser = await _userManager.FindByIdAsync(id.ToString());
 
             if (changePasswordRequestDto.NewPassword != changePasswordRequestDto.ConfirmPassword)
             {
@@ -51,9 +124,10 @@ namespace InternshipBacked.Controllers
         }
 
         // Reset Password: User has forgotten their password and needs a reset token
-        [HttpPost]
+        [HttpPut]
         [Route("reset-password")]
         [ValidateModel]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto resetPasswordRequestDto)
         {
             var identityUser = await _userManager.FindByEmailAsync(resetPasswordRequestDto.Email);
@@ -80,7 +154,7 @@ namespace InternshipBacked.Controllers
         }
 
         // Generate and send reset token
-        [HttpPost]
+        [HttpGet]
         [Route("generate-reset-token")]
         [AllowAnonymous]
         [ValidateModel]
@@ -103,30 +177,18 @@ namespace InternshipBacked.Controllers
         }
 
         [HttpGet]
-        [Route("get-all-users")]
-        [ValidateModel]
-        public async Task<IActionResult> GetAllUsers()
+        [Route("get-wishlist/{userId:Guid}")]
+        public async Task<IActionResult> GetWishlist([FromRoute] Guid userId)
         {
-            var users = await _userManager.Users.ToListAsync();
-            return Ok(users);
+            var wishlist = await _context.Wishlist.Where(w => w.UserId == userId).ToListAsync();
+            return Ok(wishlist);
         }
-
-        [HttpPut]
-        [Route("activate-deactivate-user")]
-        [ValidateModel]
-        public async Task<IActionResult> ActivateDeactivateUser([FromBody] ActivateDeactivateUserRequestDto activateDeactivateUserRequestDto)
+        [HttpGet]
+        [Route("get-favorites/{userId:Guid}")]
+        public async Task<IActionResult> GetFavorites([FromRoute] Guid userId)
         {
-            var identityUser = await _userManager.FindByEmailAsync(activateDeactivateUserRequestDto.Email);
-
-            if (identityUser != null)
-            {
-                identityUser.LockoutEnabled = activateDeactivateUserRequestDto.LockoutEnabled;
-                identityUser.LockoutEnd = activateDeactivateUserRequestDto.LockoutEnd;
-
-                await _userManager.UpdateAsync(identityUser);
-                return Ok("User was activated/deactivated successfully!");
-            }
-            return BadRequest("User was not activated/deactivated! Something went wrong!!");
+            var favs = await _context.Favorite.Where(w => w.UserId == userId).ToListAsync();
+            return Ok(favs);
         }
     }
 }
