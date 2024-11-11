@@ -6,9 +6,9 @@ namespace InternshipBackend.Models.Dtos
     public class AuthorDto
     {
         public Guid Id { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public string? Biography { get; set; }
         public string? AuthorImageUrl { get; set; }
-        public List<BookWithoutAuthorDto> Books { get; set; }
+        public virtual required List<BookWithoutAuthorDto> Books { get; set; }
     }
 }

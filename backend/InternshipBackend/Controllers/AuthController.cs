@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using InternshipBacked.Models.DTOs;
 using InternshipBacked.Repositories;
 using InternshipBackend.Models.Dtos;
 using InternshipBackend.CustomActionFilters;
+using InternshipBackend.Models.Domain;
 
 namespace InternshipBacked.Controllers
 {
@@ -12,12 +12,12 @@ namespace InternshipBacked.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ITokenRepository _tokenRepository;
-        public AuthController(UserManager<IdentityUser> userManager, ITokenRepository tokenRepository)
+        public AuthController(UserManager<ApplicationUser> userManager, ITokenRepository tokenRepository)
         {
-            this._userManager = userManager;
-            this._tokenRepository = tokenRepository;
+            _userManager = userManager;
+            _tokenRepository = tokenRepository;
         }
 
         [HttpPost]
@@ -25,12 +25,12 @@ namespace InternshipBacked.Controllers
         [ValidateModel]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
         {
-            var identityUser = new IdentityUser()
+            var appUser = new ApplicationUser()
             {
                 UserName = registerRequestDto.UserName,
                 Email = registerRequestDto.Email,
             };
-            var res = await _userManager.CreateAsync(identityUser, registerRequestDto.Password);
+            var res = await _userManager.CreateAsync(appUser, registerRequestDto.Password);
 
             if (res.Errors.Any())
             {
@@ -42,7 +42,7 @@ namespace InternshipBacked.Controllers
                 // Add Roles
                 if (registerRequestDto.Roles != null && registerRequestDto.Roles.Any())
                 {
-                    res = await _userManager.AddToRolesAsync(identityUser, registerRequestDto.Roles);
+                    res = await _userManager.AddToRolesAsync(appUser, registerRequestDto.Roles);
 
                     if (res.Succeeded)
                     {
@@ -58,30 +58,30 @@ namespace InternshipBacked.Controllers
         [ValidateModel]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
-            var identityUser = await _userManager.FindByEmailAsync(loginRequestDto.UserNameOrEmail);
-            if (identityUser == null)
+            var appUser = await _userManager.FindByEmailAsync(loginRequestDto.UserNameOrEmail);
+            if (appUser == null)
             {
-                identityUser = await _userManager.FindByNameAsync(loginRequestDto.UserNameOrEmail);
+                appUser = await _userManager.FindByNameAsync(loginRequestDto.UserNameOrEmail);
             }
-            if (identityUser != null)
+            if (appUser != null)
             {
-                var passValid = await _userManager.CheckPasswordAsync(identityUser, loginRequestDto.Password);
+                var passValid = await _userManager.CheckPasswordAsync(appUser, loginRequestDto.Password);
 
                 if (!passValid)
                 {
                     return Unauthorized("User was not logged in! Password is invalid!!");
                 }
 
-                if (identityUser.LockoutEnd > DateTimeOffset.Now)
+                if (appUser.LockoutEnd > DateTimeOffset.Now)
                 {
                     return Unauthorized("User was not logged in! Account is locked!!");
                 }
 
-                var roles = await _userManager.GetRolesAsync(identityUser);
+                var roles = await _userManager.GetRolesAsync(appUser);
 
                 if (roles != null)
                 {
-                    var jwt = _tokenRepository.CreateJWTToken(identityUser, roles.ToList());
+                    var jwt = _tokenRepository.CreateJWTToken(appUser, roles.ToList());
                     // var refreshToken = _tokenRepository.GenerateRefreshToken();
 
                     var response = new LoginResponseDto()

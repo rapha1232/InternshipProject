@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using InternshipBacked.Data;
 using InternshipBacked.Repositories;
 using InternshipBacked.Mappings;
+using InternshipBackend.Models.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +30,9 @@ builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
 
-builder.Services.AddIdentityCore<IdentityUser>()
+builder.Services.AddIdentityCore<ApplicationUser>()
 .AddRoles<IdentityRole>()
-.AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("InternshipProject")
+.AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("InternshipProject")
 .AddEntityFrameworkStores<AuthDBContext>()
 .AddDefaultTokenProviders();
 
@@ -47,6 +48,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
 });
 
+#pragma warning disable CS8604 // Possible null reference argument.
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
         options.TokenValidationParameters = new TokenValidationParameters()
@@ -60,6 +62,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         }
     );
+#pragma warning restore CS8604 // Possible null reference argument.
 
 var app = builder.Build();
 

@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "dotnet",
+      "task": "watch InternshipBackend",
+      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend\\InternshipBackend.csproj",
+      "problemMatcher": [],
+      "label": "dotnet: watch InternshipBackend"
+    },
+    {
+      "type": "dotnet",
+      "label": "watch",
+      "task": "watch InternshipBackend",
+      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend\\InternshipBackend.csproj",
+      "problemMatcher": [],
+      "isBackground": true,
+      "group": "build",
+      "presentation": {
+        "reveal": "silent"
+      }
+    }
+  ]
+}

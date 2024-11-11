@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using InternshipBacked.Models.Dtos;
+using InternshipBackend.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,17 +19,23 @@ public class TokenRepository : ITokenRepository
     {
         this.configuration = configuration;
     }
-    public string CreateJWTToken(IdentityUser user, List<string> roles)
+    public string CreateJWTToken(ApplicationUser user, List<string> roles)
     {
-        var claims = new List<Claim>();
-        claims.Add(new Claim(ClaimTypes.Email, user.Email));
+#pragma warning disable CS8604 // Possible null reference argument.
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Email, user.Email)
+        };
+#pragma warning restore CS8604 // Possible null reference argument.
 
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
+#pragma warning disable CS8604 // Possible null reference argument.
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+#pragma warning restore CS8604 // Possible null reference argument.
 
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

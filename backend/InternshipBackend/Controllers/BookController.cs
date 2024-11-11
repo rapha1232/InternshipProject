@@ -1,14 +1,6 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using InternshipBacked.Models.DTOs;
-using InternshipBacked.Repositories;
 using InternshipBackend.Models.Dtos;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using InternshipBackend.CustomActionFilters;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Identity.Client;
 using InternshipBacked.Data;
 using AutoMapper;
 using InternshipBackend.Models.Domain;
@@ -22,11 +14,11 @@ namespace InternshipBacked.Controllers
     {
 
         private readonly BookDBContext _context;
-        private readonly IMapper mapper;
+        private readonly IMapper _mapper;
         public BookController(BookDBContext context, IMapper mapper)
         {
             _context = context;
-            this.mapper = mapper;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -34,14 +26,14 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var books = await _context.Book.Include(b => b.Author).ToListAsync();
+                var books = await _context.Books.Include(b => b.Author).ToListAsync();
 
                 if (books == null || !books.Any())
                 {
                     return NotFound("No books found.");
                 }
 
-                var booksDto = mapper.Map<IEnumerable<BookDto>>(books);
+                var booksDto = _mapper.Map<IEnumerable<BookDto>>(books);
                 return Ok(booksDto);
             }
             catch (Exception ex)
@@ -55,14 +47,14 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = await _context.Book.Include(b => b.Author).FirstOrDefaultAsync(b => b.Id == id);
+                var book = await _context.Books.Include(b => b.Author).FirstOrDefaultAsync(b => b.Id == id);
 
                 if (book == null)
                 {
                     return NotFound("Book not found.");
                 }
 
-                var bookDto = mapper.Map<BookDto>(book);
+                var bookDto = _mapper.Map<BookDto>(book);
                 return Ok(bookDto);
             }
             catch (Exception ex)
@@ -76,11 +68,11 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = mapper.Map<Book>(createBookRequestDto);
-                await _context.Book.AddAsync(book);
+                var book = _mapper.Map<Book>(createBookRequestDto);
+                await _context.Books.AddAsync(book);
                 await _context.SaveChangesAsync();
 
-                var bookDto = mapper.Map<BookDto>(book);
+                var bookDto = _mapper.Map<BookDto>(book);
                 return CreatedAtAction(nameof(GetBook), new { id = book.Id }, bookDto);
             }
             catch (Exception ex)
@@ -94,18 +86,18 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = await _context.Book.FirstOrDefaultAsync(b => b.Id == id);
+                var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
 
                 if (book == null)
                 {
                     return NotFound("Book not found.");
                 }
 
-                mapper.Map(updateBookRequestDto, book);
-                _context.Book.Update(book);
+                _mapper.Map(updateBookRequestDto, book);
+                _context.Books.Update(book);
                 await _context.SaveChangesAsync();
 
-                var bookDto = mapper.Map<BookDto>(book);
+                var bookDto = _mapper.Map<BookDto>(book);
                 return Ok(bookDto);
             }
             catch (Exception ex)
@@ -119,14 +111,14 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = await _context.Book.FirstOrDefaultAsync(b => b.Id == id);
+                var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
 
                 if (book == null)
                 {
                     return NotFound("Book not found.");
                 }
 
-                _context.Book.Remove(book);
+                _context.Books.Remove(book);
                 await _context.SaveChangesAsync();
 
                 return Ok(new { message = "Book deleted successfully." });
@@ -137,20 +129,21 @@ namespace InternshipBacked.Controllers
             }
         }
 
-        [HttpGet("author/{authorId:Guid}")]
-        public async Task<IActionResult> GetBooksByAuthor([FromRoute] Guid authorId)
+        [HttpGet("author/{bookId:Guid}")]
+        public async Task<IActionResult> GetAuthor([FromRoute] Guid bookId)
         {
             try
             {
-                var books = await _context.Book.Include(b => b.Author).Where(b => b.AuthorId == authorId).ToListAsync();
+                var book = await _context.Books.Include(b => b.Author).FirstOrDefaultAsync(b => b.Id == bookId);
 
-                if (books == null || !books.Any())
+                if (book == null)
                 {
-                    return NotFound("No books found for the author.");
+                    return NotFound("Book not Found.");
                 }
 
-                var booksDto = mapper.Map<IEnumerable<BookDto>>(books);
-                return Ok(booksDto);
+                var authorDto = _mapper.Map<AuthorDto>(book.Author);
+                authorDto.Books.Add(_mapper.Map<BookWithoutAuthorDto>(book));
+                return Ok(authorDto);
             }
             catch (Exception ex)
             {
@@ -163,7 +156,7 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = await _context.Book.FirstOrDefaultAsync(b => b.Id == id);
+                var book = await _context.Books.FirstOrDefaultAsync(b => b.Id == id);
 
                 if (book == null)
                 {
@@ -171,10 +164,10 @@ namespace InternshipBacked.Controllers
                 }
 
                 book.toBeShown = true;
-                _context.Book.Update(book);
+                _context.Books.Update(book);
                 await _context.SaveChangesAsync();
 
-                var bookDto = mapper.Map<BookDto>(book);
+                var bookDto = _mapper.Map<BookDto>(book);
                 return Ok(bookDto);
             }
             catch (Exception ex)

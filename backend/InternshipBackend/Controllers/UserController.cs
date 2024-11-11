@@ -1,15 +1,12 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using InternshipBacked.Models.DTOs;
-using InternshipBacked.Repositories;
 using InternshipBackend.Models.Dtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using InternshipBackend.CustomActionFilters;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Identity.Client;
 using InternshipBacked.Data;
+using InternshipBackend.Models.Domain;
 
 namespace InternshipBacked.Controllers
 {
@@ -18,10 +15,10 @@ namespace InternshipBacked.Controllers
     // [Authorize]
     public class UserController : ControllerBase
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
         private readonly BookDBContext _context;
-        public UserController(UserManager<IdentityUser> userManager, IEmailSender emailSender, BookDBContext context)
+        public UserController(UserManager<ApplicationUser> userManager, IEmailSender emailSender, BookDBContext context)
         {
             _userManager = userManager;
             _emailSender = emailSender;
@@ -38,7 +35,7 @@ namespace InternshipBacked.Controllers
         [HttpGet]
         [Route("{id:Guid}")]
         [ValidateModel]
-        public async Task<IActionResult> GetOneUser([FromRoute] Guid id, [FromQuery] string email)
+        public async Task<IActionResult> GetOneUser([FromRoute] Guid id)
         {
             var identityUser = await _userManager.FindByIdAsync(id.ToString());
             if (identityUser != null)
@@ -69,7 +66,7 @@ namespace InternshipBacked.Controllers
         [HttpDelete]
         [Route("delete/{id:Guid}")]
         [ValidateModel]
-        public async Task<IActionResult> DeleteUser([FromRoute] Guid id, [FromQuery] string email)
+        public async Task<IActionResult> DeleteUser([FromRoute] Guid id)
         {
             var identityUser = await _userManager.FindByIdAsync(id.ToString());
 
@@ -154,7 +151,7 @@ namespace InternshipBacked.Controllers
         }
 
         // Generate and send reset token
-        [HttpGet]
+        [HttpPost]
         [Route("generate-reset-token")]
         [AllowAnonymous]
         [ValidateModel]
@@ -174,21 +171,6 @@ namespace InternshipBacked.Controllers
             await _emailSender.SendEmailAsync(generateResetTokenRequestDto.Email, "Password Reset Token", message);
 
             return Ok(token);
-        }
-
-        [HttpGet]
-        [Route("get-wishlist/{userId:Guid}")]
-        public async Task<IActionResult> GetWishlist([FromRoute] Guid userId)
-        {
-            var wishlist = await _context.Wishlist.Where(w => w.UserId == userId).ToListAsync();
-            return Ok(wishlist);
-        }
-        [HttpGet]
-        [Route("get-favorites/{userId:Guid}")]
-        public async Task<IActionResult> GetFavorites([FromRoute] Guid userId)
-        {
-            var favs = await _context.Favorite.Where(w => w.UserId == userId).ToListAsync();
-            return Ok(favs);
         }
     }
 }
