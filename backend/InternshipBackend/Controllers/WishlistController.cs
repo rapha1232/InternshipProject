@@ -45,7 +45,10 @@ namespace InternshipBacked.Controllers
         [HttpPost]
         public async Task<ActionResult> AddToWishlist([FromBody] AddToWishlistRequestDto addToWishlistRequestDto)
         {
-            var user = await _userManager.FindByIdAsync(addToWishlistRequestDto.UserId);
+            var user = await _userManager.Users
+                             .Include(u => u.Wishlist)
+                             .FirstOrDefaultAsync(u => u.Id == addToWishlistRequestDto.UserId);
+
             if (user == null)
             {
                 return NotFound("User not found");
@@ -56,6 +59,12 @@ namespace InternshipBacked.Controllers
             {
                 wishlist = new List<WishlistItem>();
                 user.Wishlist = wishlist;
+            }
+
+            var existingWishlist = user.Wishlist.FirstOrDefault(w => w.BookId == addToWishlistRequestDto.BookId);
+            if (existingWishlist != null)
+            {
+                return BadRequest("This book is already in the user's wishlist");
             }
 
             var wishlistItem = new WishlistItem
@@ -70,7 +79,49 @@ namespace InternshipBacked.Controllers
             wishlist.Add(wishlistItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok();
+            return Ok("Book added to wishlist");
+        }
+
+        [HttpPut("setReadStatus/{wishlistItemId:Guid}")]
+        public async Task<ActionResult> SetReadStatus([FromRoute] Guid wishlistItemId, [FromBody] bool readStatus)
+        {
+            var user = await _userManager.Users.Include(u => u.Wishlist).FirstOrDefaultAsync(u => u.Wishlist.Any(w => w.Id == wishlistItemId));
+            if (user == null)
+            {
+                return NotFound("User not found");
+            }
+
+            var wishlistItem = user.Wishlist.FirstOrDefault(w => w.Id == wishlistItemId);
+            if (wishlistItem == null)
+            {
+                return NotFound("Wishlist item not found");
+            }
+
+            wishlistItem.Read = readStatus;
+            await _userManager.UpdateAsync(user);
+
+            return Ok("Read status updated");
+        }
+
+        [HttpDelete("{wishlistItemId:Guid}")]
+        public async Task<ActionResult> DeleteWishlistItem([FromRoute] Guid wishlistItemId)
+        {
+            var user = await _userManager.Users.Include(u => u.Wishlist).FirstOrDefaultAsync(u => u.Wishlist.Any(w => w.Id == wishlistItemId));
+            if (user == null)
+            {
+                return NotFound("User with this wishlist item not found");
+            }
+
+            var wishlistItem = user.Wishlist.FirstOrDefault(w => w.Id == wishlistItemId);
+            if (wishlistItem == null)
+            {
+                return NotFound("Wishlist item not found");
+            }
+
+            user.Wishlist.Remove(wishlistItem);
+            await _userManager.UpdateAsync(user);
+
+            return Ok("Wishlist item removed");
         }
     }
 }

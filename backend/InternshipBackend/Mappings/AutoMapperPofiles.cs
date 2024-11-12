@@ -14,5 +14,7 @@ public class AutoMapperProfiles : Profile
         CreateMap<Book, BookDto>().ReverseMap();
         CreateMap<Book, BookWithoutAuthorDto>().ReverseMap();
         CreateMap<Book, CreateBookRequestDto>().ReverseMap();
+        CreateMap<Review, ReviewResponseDto>().ReverseMap();
+        CreateMap<Review, ReviewWithoutBookDto>().ReverseMap();
     }
 }

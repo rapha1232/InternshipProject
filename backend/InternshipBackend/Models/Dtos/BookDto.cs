@@ -1,4 +1,5 @@
 using System;
+using InternshipBackend.Models.Domain;
 
 namespace InternshipBackend.Models.Dtos
 {
@@ -13,5 +14,6 @@ namespace InternshipBackend.Models.Dtos
         public Guid AuthorId { get; set; }
 
         public virtual required AuthorWithoutBooksDto Author { get; set; }
+        public virtual required ICollection<ReviewWithoutBookDto> Reviews { get; set; }
     }
 }

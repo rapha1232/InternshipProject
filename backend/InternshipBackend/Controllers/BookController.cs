@@ -26,7 +26,7 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var books = await _context.Books.Include(b => b.Author).ToListAsync();
+                var books = await _context.Books.Include(b => b.Author).Include(b => b.Reviews).ToListAsync();
 
                 if (books == null || !books.Any())
                 {

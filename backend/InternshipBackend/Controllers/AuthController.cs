@@ -90,6 +90,8 @@ namespace InternshipBacked.Controllers
                         // RefreshToken = refreshToken
                     };
 
+                    HttpContext.Session.SetString("UserId", appUser.Id);
+
                     return Ok(response);
                 }
             }
