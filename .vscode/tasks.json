@@ -4,7 +4,7 @@
     {
       "type": "dotnet",
       "task": "watch InternshipBackend",
-      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend\\InternshipBackend.csproj",
+      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend.csproj",
       "problemMatcher": [],
       "label": "dotnet: watch InternshipBackend"
     },
@@ -12,7 +12,7 @@
       "type": "dotnet",
       "label": "watch",
       "task": "watch InternshipBackend",
-      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend\\InternshipBackend.csproj",
+      "file": "C:\\Users\\raphy\\Desktop\\InternshipProject\\backend\\InternshipBackend.csproj",
       "problemMatcher": [],
       "isBackground": true,
       "group": "build",

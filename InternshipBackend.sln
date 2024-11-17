@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{B6BBF700-AC06-4F2A-8719-463E212522FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InternshipBackend", "backend\InternshipBackend\InternshipBackend.csproj", "{A4CE96D2-7022-44BA-BEBF-FC4BD9D962D0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InternshipBackend", "backend\InternshipBackend.csproj", "{A4CE96D2-7022-44BA-BEBF-FC4BD9D962D0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
