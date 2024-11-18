@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 import { CheckIcon, PlusCircleIcon } from "lucide-react";
 import { Options } from "nuqs";
 import React from "react";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Command,
   CommandEmpty,
@@ -14,9 +14,9 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "./ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Separator } from "./ui/separator";
+} from "../ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Separator } from "../ui/separator";
 
 interface FilterOption {
   value: string;
@@ -25,7 +25,6 @@ interface FilterOption {
 }
 
 interface FilterBoxProps {
-  filterKey: string;
   title: string;
   options: FilterOption[];
   setFilterValue: (
@@ -36,7 +35,6 @@ interface FilterBoxProps {
 }
 
 export function DataTableFilterBox({
-  filterKey,
   title,
   options,
   setFilterValue,
@@ -63,7 +61,10 @@ export function DataTableFilterBox({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="border-dashed">
+        <Button
+          variant="outline"
+          className="border-dashed border-black/80 dark:border-white/40"
+        >
           <PlusCircleIcon className="mr-2 h-4 w-4" />
           {title}
           {selectedValuesSet.size > 0 && (

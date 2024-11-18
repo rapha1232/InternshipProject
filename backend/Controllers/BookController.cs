@@ -61,7 +61,7 @@ namespace InternshipBacked.Controllers
         {
             try
             {
-                var book = await _context.Books.Include(b => b.Author).FirstOrDefaultAsync(b => b.Id == id);
+                var book = await _context.Books.Include(b => b.Author).Include(b => b.Reviews).FirstOrDefaultAsync(b => b.Id == id);
 
                 if (book == null)
                 {

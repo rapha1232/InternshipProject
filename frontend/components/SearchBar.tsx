@@ -1,9 +1,18 @@
 import { Input } from "./ui/input";
 
 interface SearchBarProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
   className?: string;
 }
-export default function SearchBar({ className }: SearchBarProps) {
+
+export default function SearchBar({
+  className,
+  onChange,
+  value,
+  placeholder,
+}: SearchBarProps) {
   return (
     <div
       className={`flex items-center w-full max-w-sm space-x-2 rounded-lg border border-gray-300 px-3.5 py-2 ${className}`}
@@ -24,8 +33,10 @@ export default function SearchBar({ className }: SearchBarProps) {
       </svg>
       <Input
         type="search"
-        placeholder="Search"
+        placeholder={placeholder ? placeholder : "Search ..."}
         className="w-full h-8 font-semibold focus-visible:ring-transparent border-none"
+        onChange={onChange}
+        value={value}
       />
     </div>
   );

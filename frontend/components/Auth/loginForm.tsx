@@ -25,7 +25,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-export const LoginSchema = z.object({
+const LoginSchema = z.object({
   userNameOrEmail: z.string(),
   password: z
     .string()

@@ -40,9 +40,9 @@ namespace InternshipBacked.Controllers
             var appUser = await _userManager.FindByIdAsync(id.ToString());
             if (appUser != null)
             {
-                return Ok(_mapper.Map<ApplicationUserDto>(appUser));
+                return Ok(new { message = "Success", user = _mapper.Map<ApplicationUserDto>(appUser) });
             }
-            return BadRequest("User not found!");
+            return BadRequest(new { message = "User not found!" });
         }
 
         [HttpPut]

@@ -21,7 +21,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const user = JSON.parse(savedUser);
+      const u = {
+        ...user,
+        wishlist: user?.wishlist ?? [],
+      };
+      setUser(u);
     } else if (
       !savedUser &&
       pathname !== "/" &&

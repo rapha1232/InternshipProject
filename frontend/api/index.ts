@@ -163,6 +163,36 @@ export async function deleteData(url: string) {
   return data;
 }
 
+export async function postData(url: string, opts: { body: any }) {
+  let accessToken = Cookies.get("jwtToken");
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: "",
+  };
+  if (opts.body) options.body = JSON.stringify(opts.body);
+  let response = await fetch(`${api_endpoint}${url}`, options);
+
+  if (response.status === 401) {
+    const refreshSuccess = await refreshAccessToken();
+    if (refreshSuccess) {
+      // Retry the original request with the new access token
+      accessToken = Cookies.get("jwtToken");
+      options.headers = {
+        ...options.headers,
+        Authorization: `Bearer ${accessToken}`,
+      };
+      response = await fetch(`${api_endpoint}${url}`, options);
+    }
+  }
+
+  const data = await response.json();
+  return data;
+}
+
 export const handleLogout = () => {
   localStorage.removeItem("user");
   Cookies.remove("jwtToken");

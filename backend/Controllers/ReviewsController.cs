@@ -47,22 +47,15 @@ namespace InternshipBacked.Controllers
         [HttpPost]
         public async Task<ActionResult> AddReview([FromBody] AddReviewRequestDto addReviewRequestDto)
         {
-            var userId = HttpContext.Session.GetString("UserId");
-
-            if (userId == null)
-            {
-                return Unauthorized();
-            }
-
             var book = await _dbContext.Books.Include(b => b.Reviews).FirstOrDefaultAsync(b => b.Id == addReviewRequestDto.BookId);
             if (book == null)
             {
-                return NotFound("Book not found");
+                return NotFound(new { message = "Book not found" });
             }
 
             var review = new Review
             {
-                UserId = userId,
+                UserId = addReviewRequestDto.UserId.ToString(),
                 BookId = addReviewRequestDto.BookId,
                 Content = addReviewRequestDto.Content,
                 Rating = addReviewRequestDto.Rating,
@@ -72,55 +65,31 @@ namespace InternshipBacked.Controllers
             await _dbContext.Reviews.AddAsync(review);
             await _dbContext.SaveChangesAsync();
 
-            return Ok("Review Created Successfully");
+            return Ok(new { message = "Review Created Successfully" });
         }
 
         [HttpDelete("{reviewId:Guid}")]
         public async Task<ActionResult> DeleteReview([FromRoute] Guid reviewId)
         {
-            var userId = HttpContext.Session.GetString("UserId");
-
-            if (userId == null)
-            {
-                return Unauthorized();
-            }
-
-            var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId);
-            if (review == null)
-            {
-                return NotFound("Review not found");
-            }
-
-            if (review.UserId != userId)
-            {
-                return Unauthorized("You are not authorized to delete this review");
-            }
-
-            _dbContext.Reviews.Remove(review);
-            await _dbContext.SaveChangesAsync();
-
-            return Ok("Review Deleted Successfully");
-        }
-
-        [HttpPut("{reviewId:Guid}")]
-        public async Task<ActionResult> UpdateReview([FromRoute] Guid reviewId, [FromBody] UpdateReviewRequestDto updateReviewRequestDto)
-        {
-            var userId = HttpContext.Session.GetString("UserId");
-
-            if (userId == null)
-            {
-                return Unauthorized(new { message = "You are not authorized to update this review" });
-            }
-
             var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId);
             if (review == null)
             {
                 return NotFound(new { message = "Review not found" });
             }
 
-            if (review.UserId != userId)
+            _dbContext.Reviews.Remove(review);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(new { message = "Review Deleted Successfully" });
+        }
+
+        [HttpPut("{reviewId:Guid}")]
+        public async Task<ActionResult> UpdateReview([FromRoute] Guid reviewId, [FromBody] UpdateReviewRequestDto updateReviewRequestDto)
+        {
+            var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.Id == reviewId);
+            if (review == null)
             {
-                return Unauthorized(new { message = "You are not authorized to update this review" });
+                return NotFound(new { message = "Review not found" });
             }
 
             review.Content = updateReviewRequestDto.Content;

@@ -24,6 +24,11 @@ export type GetAllBooksResponse = {
   books?: BookDto[];
   details?: string;
 };
+export type GetSingleBookResponse = {
+  message: string;
+  book?: BookDto;
+  details?: string;
+};
 
 // Define the BookDto type based on what is expected in each book-related response
 export interface BookDto {

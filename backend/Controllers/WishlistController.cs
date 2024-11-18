@@ -4,6 +4,7 @@ using InternshipBackend.Models.Domain;
 using InternshipBackend.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 
 namespace InternshipBacked.Controllers
@@ -14,9 +15,11 @@ namespace InternshipBacked.Controllers
     public class WishlistController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        public WishlistController(UserManager<ApplicationUser> userManager)
+        private readonly IMapper _mapper;
+        public WishlistController(UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         [HttpGet("{userId:Guid}")]
@@ -53,7 +56,7 @@ namespace InternshipBacked.Controllers
 
             if (user == null)
             {
-                return NotFound("User not found");
+                return NotFound(new { message = "User not found" });
             }
 
             var wishlist = user.Wishlist;
@@ -66,7 +69,7 @@ namespace InternshipBacked.Controllers
             var existingWishlist = user.Wishlist.FirstOrDefault(w => w.BookId == addToWishlistRequestDto.BookId);
             if (existingWishlist != null)
             {
-                return BadRequest("This book is already in the user's wishlist");
+                return BadRequest(new { message = "This book is already in the user's wishlist" });
             }
 
             var wishlistItem = new WishlistItem
@@ -81,7 +84,7 @@ namespace InternshipBacked.Controllers
             wishlist.Add(wishlistItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok("Book added to wishlist");
+            return Ok(new { message = "Book added to wishlist", wishlistItem = _mapper.Map<WishlistItemWithoutUserDto>(wishlistItem) });
         }
 
         [HttpPut("setReadStatus/{wishlistItemId:Guid}")]
@@ -102,7 +105,7 @@ namespace InternshipBacked.Controllers
             wishlistItem.Read = readStatus;
             await _userManager.UpdateAsync(user);
 
-            return Ok(new { message = "Read status updated" });
+            return Ok(new { message = "Read status updated", wishlistItem });
         }
 
         [HttpDelete("{wishlistItemId:Guid}")]
@@ -111,19 +114,19 @@ namespace InternshipBacked.Controllers
             var user = await _userManager.Users.Include(u => u.Wishlist).FirstOrDefaultAsync(u => u.Wishlist.Any(w => w.Id == wishlistItemId));
             if (user == null)
             {
-                return NotFound("User with this wishlist item not found");
+                return NotFound(new { message = "User with this wishlist item not found" });
             }
 
             var wishlistItem = user.Wishlist.FirstOrDefault(w => w.Id == wishlistItemId);
             if (wishlistItem == null)
             {
-                return NotFound("Wishlist item not found");
+                return NotFound(new { message = "Wishlist item not found" });
             }
 
             user.Wishlist.Remove(wishlistItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok("Wishlist item removed");
+            return Ok(new { message = "Wishlist item removed", wishlistItem });
         }
     }
 }
