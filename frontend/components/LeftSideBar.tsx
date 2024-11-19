@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SignedOut from "./Auth/SignedOut";
+
 const LeftSideBar = () => {
   const pathname = usePathname();
+
   return (
     <section className="bg-background custom-scrollbar light-border sticky left-0 top-0 z-10 flex h-screen flex-col justify-between overflow-y-auto border-r border-violet-600/30 p-6 pt-36 shadow-light-300 dark:shadow-none max-sm:hidden lg:w-[266px]">
       <div className="flex flex-1 flex-col gap-6">

@@ -1,5 +1,5 @@
 "use client";
-import { deleteData, handleLogout } from "@/api";
+import { handleLogout } from "@/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +12,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useMutation } from "@tanstack/react-query";
+import { useDeleteAccount } from "@/lib/hooks";
+import { useUser } from "@/Providers/UserProvider";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,54 +21,61 @@ import { toast } from "sonner";
 
 export function DeleteUserDialog() {
   const router = useRouter();
-  const user = JSON.parse(localStorage.getItem("user")!);
+  const { user, setUser } = useUser();
   const [isDeleteLoading, setIsDeleteLoading] = useState<boolean>(false);
-  const { mutate: deleteUser } = useMutation({
-    mutationFn: async () => await deleteData(`User/delete/${user.id}`),
-    onMutate: () => {
+
+  // Define `deleteUser` hook, but it won't be called if `!user`
+  const { deleteUser } = useDeleteAccount(
+    user?.id || "",
+    () => {
       setIsDeleteLoading(true);
     },
-    onSuccess: (data) => {
-      router.push("/auth/login");
+    (data) => {
+      setUser(null);
+      router.push("/");
       setIsDeleteLoading(false);
       toast.success(data.message);
       handleLogout();
     },
-    onError: (error) => {
+    (error) => {
       setIsDeleteLoading(false);
       toast.error(error.message);
-    },
-  });
+    }
+  );
+
+  // Render UI
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive">Delete account</Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button
-              onClick={() => deleteUser()}
-              disabled={isDeleteLoading}
-              variant="destructive"
-              className="bg-destructive hover:bg-destructive/90 text-foreground"
-            >
-              {isDeleteLoading && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
-              )}
-              Delete Profile
-            </Button>
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    user && (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button variant="destructive">Delete account</Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                onClick={() => deleteUser(user.id)}
+                disabled={isDeleteLoading}
+                variant="destructive"
+                className="bg-destructive hover:bg-destructive/90 text-foreground"
+              >
+                {isDeleteLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />
+                )}
+                Delete Profile
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
   );
 }

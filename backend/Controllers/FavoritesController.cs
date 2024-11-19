@@ -25,13 +25,13 @@ namespace InternshipBacked.Controllers
             var user = await _userManager.Users.Include(u => u.Favorites).FirstOrDefaultAsync(u => u.Id == userId.ToString());
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found" });
             }
 
             var favs = user.Favorites;
             if (favs == null)
             {
-                return NotFound("User has no favorites");
+                return NotFound(new { message = "User has no favorites" });
             }
 
             var favsResult = favs.Select(item => new
@@ -40,7 +40,7 @@ namespace InternshipBacked.Controllers
                 item.BookId,
             }).ToList();
 
-            return Ok(favsResult);
+            return Ok(new { message = "Success", favorites = favsResult });
         }
 
         [HttpPost]
@@ -51,14 +51,14 @@ namespace InternshipBacked.Controllers
                                   .FirstOrDefaultAsync(u => u.Id == addToFavoritesRequestDto.UserId);
             if (user == null)
             {
-                return NotFound("User not found");
+                return NotFound(new { message = "User not found" });
             }
 
             // Check if the favorite already exists for the user
             var existingFavorite = user.Favorites.FirstOrDefault(f => f.BookId == addToFavoritesRequestDto.BookId);
             if (existingFavorite != null)
             {
-                return BadRequest("This book is already in the user's favorites");
+                return BadRequest(new { message = "This book is already in the user's favorites" });
             }
 
             var favsItem = new Favorite
@@ -71,7 +71,7 @@ namespace InternshipBacked.Controllers
             user.Favorites.Add(favsItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok("Book added to favorites");
+            return Ok(new { message = "Book added to favorites" });
         }
 
         [HttpDelete("{favsItemId:Guid}")]
@@ -80,19 +80,19 @@ namespace InternshipBacked.Controllers
             var user = await _userManager.Users.Include(u => u.Favorites).FirstOrDefaultAsync(u => u.Favorites.Any(w => w.Id == favsItemId));
             if (user == null)
             {
-                return NotFound("User with this favotite item not found");
+                return NotFound(new { message = "User with this favotite item not found" });
             }
 
             var favsItem = user.Favorites.FirstOrDefault(w => w.Id == favsItemId);
             if (favsItem == null)
             {
-                return NotFound("Favorites item not found");
+                return NotFound(new { message = "Favorites item not found" });
             }
 
             user.Favorites.Remove(favsItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok("Favorites item removed");
+            return Ok(new { message = "Favorites item removed" });
         }
     }
 }

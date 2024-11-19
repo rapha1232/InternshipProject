@@ -30,7 +30,6 @@ export type GetSingleBookResponse = {
   details?: string;
 };
 
-// Define the BookDto type based on what is expected in each book-related response
 export interface BookDto {
   id: string;
   title: string;

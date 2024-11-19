@@ -1,10 +1,8 @@
 "use client";
 
-import { getData } from "@/api";
 import { filterBooks } from "@/lib/filtering";
+import { useGetAllBooks } from "@/lib/hooks";
 import { sortBooks } from "@/lib/sorting";
-import { GetAllBooksResponse } from "@/types";
-import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import LoadingErrorState from "./LoadingErrorState";
@@ -24,10 +22,7 @@ export default function BookList() {
     searchParams?.get("sort") || "title-asc"
   );
 
-  const { data, isLoading, isError, isSuccess } = useQuery({
-    queryFn: async (): Promise<GetAllBooksResponse> => await getData("Book"),
-    queryKey: ["allBooks"],
-  });
+  const { data, isLoading, isError, isSuccess } = useGetAllBooks();
 
   useEffect(() => {
     const params = new URLSearchParams();

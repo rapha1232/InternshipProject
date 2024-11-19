@@ -1,8 +1,11 @@
 "use client";
-import { deleteData, getData, postData } from "@/api";
+import {
+  useAddToWishlist,
+  useGetSingleBook,
+  useRemoveFromWishlist,
+} from "@/lib/hooks";
 import { useUser } from "@/Providers/UserProvider";
-import { ApplicationUser, BookDto, GetSingleBookResponse } from "@/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { ApplicationUser, BookDto } from "@/types";
 import Image from "next/image";
 import { toast } from "sonner";
 import ReviewCard from "./ReviewCard";
@@ -10,11 +13,7 @@ import ReviewForm from "./ReviewForm";
 
 const Book = ({ id }: { id: string }) => {
   const { user, setUser, loading: isUserLoading } = useUser();
-  const { data, isLoading, isError } = useQuery({
-    queryFn: async (): Promise<GetSingleBookResponse> =>
-      await getData(`Book/${id}`),
-    queryKey: ["oneBook", id],
-  });
+  const { data, isLoading, isError } = useGetSingleBook(id);
 
   if (isLoading) return <div>Loading...</div>;
   if (isUserLoading) return <div>Loading User...</div>;
@@ -91,48 +90,53 @@ const BookShowcase = ({
   const normalizedUser = { ...user, wishlist: user.wishlist ?? [] };
 
   // Add to Wishlist
-  const { mutate: addToWishlist } = useMutation({
-    mutationFn: async (): Promise<{ message: string; wishlistItem: any }> =>
-      await postData(`Wishlist`, {
-        body: { bookId: book.id, userId: normalizedUser.id, read: false },
-      }),
-    onSuccess: (data) => {
-      const updatedWishlist = [...normalizedUser.wishlist, data.wishlistItem];
-      const updatedUser = { ...normalizedUser, wishlist: updatedWishlist };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-      toast.success(data.message);
-    },
-  });
+  const onAddSuccess = (data: any) => {
+    const updatedWishlist = [...normalizedUser.wishlist, data.wishlistItem];
+    const updatedUser = { ...normalizedUser, wishlist: updatedWishlist };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+    toast.success(data.message);
+  };
+  const onAddError = () => {
+    toast.error("Failed to add to wishlist");
+  };
+  const onRemoveError = () => {
+    toast.error("Failed to remove from wishlist");
+  };
+  const onRemoveSuccess = (data: any) => {
+    // Filter out the item and ensure no `null` or invalid entries remain
+    const updatedWishlist = normalizedUser.wishlist
+      .filter((w) => w && w.bookId !== book.id)
+      .filter(Boolean); // Removes falsy values like `null` or `undefined`
+
+    console.log(updatedWishlist);
+
+    const updatedUser = {
+      ...normalizedUser,
+      wishlist: updatedWishlist, // Empty array if nothing is left
+    };
+
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+
+    toast.success(data.message);
+  };
+
+  const { addToWishlist } = useAddToWishlist(
+    book.id,
+    normalizedUser.id,
+    false,
+    onAddSuccess,
+    onAddError
+  );
 
   // Remove from Wishlist
-  const { mutate: removeFromWishlist } = useMutation({
-    mutationFn: async (): Promise<{ message: string }> => {
-      const wishlistItem = normalizedUser.wishlist.find(
-        (w) => w.bookId === book.id
-      );
-      if (!wishlistItem) throw new Error("Item not found in wishlist.");
-      return await deleteData(`Wishlist/${wishlistItem.id}`);
-    },
-    onSuccess: (data) => {
-      // Filter out the item and ensure no `null` or invalid entries remain
-      const updatedWishlist = normalizedUser.wishlist
-        .filter((w) => w && w.bookId !== book.id)
-        .filter(Boolean); // Removes falsy values like `null` or `undefined`
-
-      console.log(updatedWishlist);
-
-      const updatedUser = {
-        ...normalizedUser,
-        wishlist: updatedWishlist, // Empty array if nothing is left
-      };
-
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-
-      toast.success(data.message);
-    },
-  });
+  const { removeFromWishlist } = useRemoveFromWishlist(
+    book.id,
+    user,
+    onRemoveSuccess,
+    onRemoveError
+  );
 
   return (
     <div className="relative bg-gradient-to-b from-indigo-500 to-purple-600 text-white p-8 rounded-2xl shadow-2xl max-w-4xl mx-auto">

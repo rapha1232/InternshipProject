@@ -1,3 +1,4 @@
+import { filterOptions } from "@/constants";
 import { Options } from "nuqs";
 import SearchBar from "../SearchBar";
 import { Button } from "../ui/button";
@@ -34,35 +35,37 @@ export default function SearchParams({
     params.set("sort", "title-asc"); // Default sort value
     window.history.replaceState(null, "", `?${params.toString()}`);
   };
+
   return (
-    <div className="flex items-center gap-4">
-      <SearchBar
-        value={searchQuery}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-          setSearchQuery(e.target.value)
-        }
-        placeholder="Search by title or author..."
-      />
-      <DataTableFilterBox
-        title="Rating"
-        options={[
-          { label: "1 Star", value: "1" },
-          { label: "2 Stars", value: "2" },
-          { label: "3 Stars", value: "3" },
-          { label: "4 Stars", value: "4" },
-          { label: "5 Stars", value: "5" },
-        ]}
-        filterValue={ratingFilter}
-        setFilterValue={(value) => setRatingFilter(value)}
-      />
-      <Sorting sortOption={sortOption} setSortOption={setSortOption} />
-      <Button
-        variant="outline"
-        onClick={handleClear}
-        className="bg-violet-600 hover:bg-violet-800 border-none outline-none"
-      >
-        Clear
-      </Button>
+    <div className="flex flex-wrap gap-4">
+      {/* Search Bar: Full Width on Small Screens */}
+      <div className="w-full lg:w-auto">
+        <SearchBar
+          value={searchQuery}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSearchQuery(e.target.value)
+          }
+          placeholder="Search by title or author..."
+        />
+      </div>
+
+      {/* Filters and Sorting */}
+      <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+        <DataTableFilterBox
+          title="Rating"
+          options={filterOptions.rating}
+          filterValue={ratingFilter}
+          setFilterValue={(value) => setRatingFilter(value)}
+        />
+        <Sorting sortOption={sortOption} setSortOption={setSortOption} />
+        <Button
+          variant="outline"
+          onClick={handleClear}
+          className="bg-violet-600 hover:bg-violet-800 border-none outline-none"
+        >
+          Clear
+        </Button>
+      </div>
     </div>
   );
 }

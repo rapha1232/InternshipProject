@@ -1,5 +1,4 @@
 "use client";
-import { putData } from "@/api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,8 +19,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { useEditReview } from "@/lib/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Edit } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -47,19 +47,16 @@ export function UpdateDialog({
     },
   });
 
-  const { mutate } = useMutation({
-    mutationFn: async (
-      values: z.infer<typeof UpdateReviewSchema>
-    ): Promise<{ message: string }> =>
-      await putData(`Reviews/${reviewId}`, { body: values }),
-    onSuccess: (data) => {
+  const { editReview } = useEditReview(
+    reviewId,
+    (data) => {
       toast.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["oneBook", bookId] }); // Refetch book data to update reviews
     },
-    onError: (error) => {
+    (error) => {
       toast.error(error.message);
-    },
-  });
+    }
+  );
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -76,7 +73,7 @@ export function UpdateDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => mutate(data))}>
+          <form onSubmit={form.handleSubmit((data) => editReview(data))}>
             <FormField
               control={form.control}
               name="content"

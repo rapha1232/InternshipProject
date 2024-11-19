@@ -1,8 +1,8 @@
 "use client";
-import { deleteData } from "@/api";
+import { useDeleteReview } from "@/lib/hooks";
 import { useUser } from "@/Providers/UserProvider";
 import { Review } from "@/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Calendar, Trash } from "lucide-react";
 import { toast } from "sonner";
 import { UpdateDialog } from "./UpdateDialog";
@@ -33,17 +33,16 @@ export default function ReviewCard({
     );
   };
 
-  const { mutate: deleteReview } = useMutation({
-    mutationFn: async (reviewId: string): Promise<{ message: string }> =>
-      await deleteData(`Reviews/${reviewId}`),
-    onSuccess: (data) => {
-      toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ["oneBook", bookId] }); // Refetch book data to update reviews
-    },
-    onError: (error) => {
-      toast.error(error.message);
-    },
-  });
+  const onSuccess = (data: any) => {
+    toast.success(data.message);
+    queryClient.invalidateQueries({ queryKey: ["oneBook", bookId] });
+  };
+
+  const onError = (error: any) => {
+    toast.error(error.message);
+  };
+
+  const { deleteReview } = useDeleteReview(onSuccess, onError);
   return (
     <div className="p-4 bg-neutral-200 dark:bg-neutral-800 rounded-lg shadow-md w-3/4 max-w-2xl">
       <div className="flex justify-between mb-2">

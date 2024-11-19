@@ -29,7 +29,8 @@ namespace InternshipBacked.Controllers
         public async Task<IActionResult> GetAllUsers()
         {
             var users = await _userManager.Users.ToListAsync();
-            return Ok(users);
+            var usersDto = _mapper.Map<IEnumerable<ApplicationUserDto>>(users);
+            return Ok(new { message = "Success", users = usersDto });
         }
 
         [HttpGet]
@@ -76,7 +77,7 @@ namespace InternshipBacked.Controllers
                 await _userManager.DeleteAsync(appUser);
                 return Ok(new { message = "User was deleted successfully!" });
             }
-            return BadRequest("User was not deleted! Something went wrong!!");
+            return BadRequest(new { message = "User was not deleted! Something went wrong!!" });
         }
 
         [HttpPut]
@@ -145,7 +146,7 @@ namespace InternshipBacked.Controllers
                 }
                 else
                 {
-                    return BadRequest(res.Errors);
+                    return BadRequest(new { message = res.Errors });
                 }
             }
             return BadRequest(new { message = "Password was not reset! Something went wrong!!" });
@@ -161,7 +162,7 @@ namespace InternshipBacked.Controllers
             var appUser = await _userManager.FindByEmailAsync(generateResetTokenRequestDto.Email);
             if (appUser == null)
             {
-                return BadRequest("User not found!");
+                return BadRequest(new { message = "User not found!" });
             }
 
             var token = await _userManager.GeneratePasswordResetTokenAsync(appUser);
@@ -171,7 +172,7 @@ namespace InternshipBacked.Controllers
 
             await _emailSender.SendEmailAsync(generateResetTokenRequestDto.Email, "Password Reset Token", message);
 
-            return Ok(token);
+            return Ok(new { message = "Success", token });
         }
     }
 }

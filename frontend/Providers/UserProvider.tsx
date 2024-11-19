@@ -33,7 +33,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       pathname !== "/books" &&
       pathname !== "/authors"
     ) {
-      router.replace("/auth/login");
+      router.replace("/");
     }
     setLoading(false);
   }, []);

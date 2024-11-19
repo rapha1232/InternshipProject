@@ -1,5 +1,4 @@
 "use client";
-import { putData } from "@/api";
 import {
   Form,
   FormControl,
@@ -9,8 +8,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useUpdateProfile } from "@/lib/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,28 +37,27 @@ export default function ProfileForm() {
     defaultValues: defVal,
   });
 
-  const { mutate } = useMutation({
-    mutationFn: async (values: ProfileFormValues) =>
-      await putData(`User/update/${user.id}`, { body: values }),
-    onMutate: () => {
+  const { updateProfile } = useUpdateProfile(
+    user.id,
+    () => {
       setIsLoading(true);
     },
-    onSuccess: (data) => {
+    (data: any) => {
       setIsLoading(false);
       toast.success(data.message);
       if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
     },
-    onError: (error) => {
+    (error: any) => {
       setIsLoading(false);
       toast.error(error.message);
-    },
-  });
+    }
+  );
 
   return (
     <>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((values) => mutate(values))}
+          onSubmit={form.handleSubmit((values) => updateProfile(values))}
           className="space-y-6 sm:max-w-md mx-auto dark:bg-neutral-900 bg-neutral-100"
         >
           <FormField

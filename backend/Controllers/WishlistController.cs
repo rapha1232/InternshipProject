@@ -28,13 +28,13 @@ namespace InternshipBacked.Controllers
             var user = await _userManager.Users.Include(u => u.Wishlist).FirstOrDefaultAsync(u => u.Id == userId.ToString());
             if (user == null)
             {
-                return NotFound();
+                return NotFound(new { message = "User not found" });
             }
 
             var wishlist = user.Wishlist;
             if (wishlist == null)
             {
-                return NotFound("User has no wishlist");
+                return NotFound(new { message = "User has no wishlist" });
             }
 
             var wishlistResult = wishlist.Select(item => new
@@ -44,7 +44,7 @@ namespace InternshipBacked.Controllers
                 item.Read
             }).ToList();
 
-            return Ok(wishlistResult);
+            return Ok(new { message = "Success", wishlistResult });
         }
 
         [HttpPost]

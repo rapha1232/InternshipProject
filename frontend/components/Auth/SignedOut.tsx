@@ -1,18 +1,14 @@
 "use client";
-
 import { useUser } from "@/Providers/UserProvider";
-import { Loader2 } from "lucide-react";
-import { ReactNode } from "react";
 
-const SignedOut = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useUser();
-  if (!user && !loading) {
-    return <>{children}</>;
+const SignedOut = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useUser(); // Get user state from context
+
+  if (user) {
+    return null; // Render nothing if user is signed in
   }
-  if (loading) {
-    return <Loader2 className="h-8 w-8 animate-spin" />;
-  }
-  return null;
+
+  return <>{children}</>;
 };
 
 export default SignedOut;

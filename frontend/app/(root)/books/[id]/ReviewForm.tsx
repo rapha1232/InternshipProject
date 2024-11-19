@@ -1,4 +1,3 @@
-import { postData } from "@/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -9,9 +8,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { usePostReview } from "@/lib/hooks";
 import { useUser } from "@/Providers/UserProvider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,32 +37,31 @@ const ReviewForm = ({ bookId }: { bookId: string }) => {
       rating: 0,
     },
   });
-  const { mutate } = useMutation({
-    mutationFn: async (
-      values: z.infer<typeof ReviewSchema>
-    ): Promise<{ message: string }> =>
-      await postData("Reviews", { body: values }),
-    onMutate: () => {
-      setIsPostLoading(true);
-    },
-    onSuccess: (data) => {
-      setIsPostLoading(false);
-      toast.success(data.message);
-      form.reset();
-      queryClient.invalidateQueries({ queryKey: ["oneBook", bookId] });
-    },
-    onError: (e) => {
-      setIsPostLoading(false);
-      toast.error(e.message);
-    },
-  });
+
+  const onMutate = () => {
+    setIsPostLoading(true);
+  };
+
+  const onSuccess = (data: { message: string }) => {
+    setIsPostLoading(false);
+    toast.success(data.message);
+    form.reset();
+    queryClient.invalidateQueries({ queryKey: ["oneBook", bookId] });
+  };
+
+  const onError = (e: Error) => {
+    setIsPostLoading(false);
+    toast.error(e.message);
+  };
+
+  const { postReview } = usePostReview(onMutate, onSuccess, onError);
 
   return (
     <>
       <h3 className="text-2xl font-semibold mb-4">Add Your Review</h3>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => mutate(data))}
+          onSubmit={form.handleSubmit((data) => postReview(data))}
           className="space-y-4"
         >
           <FormField

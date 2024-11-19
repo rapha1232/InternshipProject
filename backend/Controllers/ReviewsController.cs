@@ -32,16 +32,16 @@ namespace InternshipBacked.Controllers
             var book = await _dbContext.Books.Include(b => b.Reviews).FirstOrDefaultAsync(b => b.Id == bookId);
             if (book == null)
             {
-                return NotFound("Book not found");
+                return NotFound(new { message = "Book not found" });
             }
 
             var reviews = book.Reviews;
             if (reviews == null)
             {
-                return NotFound("Book has no reviews");
+                return NotFound(new { message = "Book has no reviews" });
             }
 
-            return Ok(reviews);
+            return Ok(new { message = "Success", reviews });
         }
 
         [HttpPost]
@@ -107,12 +107,12 @@ namespace InternshipBacked.Controllers
 
             if (userId == null)
             {
-                return Unauthorized();
+                return Unauthorized(new { message = "Unauthorized" });
             }
 
             var reviews = await _dbContext.Reviews.Where(r => r.UserId == userId).ToListAsync();
 
-            return Ok(reviews);
+            return Ok(new { message = "Success", reviews });
         }
 
         [HttpGet("userReview/{bookId:Guid}")]
@@ -122,17 +122,17 @@ namespace InternshipBacked.Controllers
 
             if (userId == null)
             {
-                return Unauthorized();
+                return Unauthorized(new { message = "Unauthorized" });
             }
 
             var review = await _dbContext.Reviews.FirstOrDefaultAsync(r => r.UserId == userId && r.BookId == bookId);
 
             if (review == null)
             {
-                return NotFound("Review not found");
+                return NotFound(new { message = "Review not found" });
             }
 
-            return Ok(review);
+            return Ok(new { message = "Success", review });
         }
 
         [HttpGet("review/{reviewId:Guid}")]
@@ -142,10 +142,10 @@ namespace InternshipBacked.Controllers
 
             if (review == null)
             {
-                return NotFound("Review not found");
+                return NotFound(new { message = "Review not found" });
             }
 
-            return Ok(review);
+            return Ok(new { message = "Success", review });
         }
 
         [HttpGet("avgRating/{bookId:Guid}")]
@@ -153,7 +153,7 @@ namespace InternshipBacked.Controllers
         {
             var avgRating = await _dbContext.Reviews.AverageAsync(r => r.Rating);
 
-            return Ok(avgRating);
+            return Ok(new { message = "Success", avgRating });
         }
 
         [HttpGet("totalReviews/{bookId:Guid}")]
@@ -161,7 +161,7 @@ namespace InternshipBacked.Controllers
         {
             var totalReviews = await _dbContext.Reviews.CountAsync(r => r.BookId == bookId);
 
-            return Ok(totalReviews);
+            return Ok(new { message = "Success", totalReviews });
         }
 
         [HttpGet("viewRatings/{bookId:Guid}")]
@@ -169,7 +169,7 @@ namespace InternshipBacked.Controllers
         {
             var ratings = await _dbContext.Reviews.Select(r => r.Rating).ToListAsync();
 
-            return Ok(ratings);
+            return Ok(new { message = "Success", ratings });
         }
     }
 }

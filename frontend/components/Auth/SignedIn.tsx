@@ -9,10 +9,15 @@ const SignedIn = ({
 }: {
   children: (props: { user: ApplicationUser }) => ReactNode;
 }) => {
-  const { user } = useUser();
+  const { user, loading } = useUser();
   if (!user) {
     return null;
   }
+
+  if (loading) {
+    return null;
+  }
+
   return <>{children({ user })}</>;
 };
 

@@ -16,10 +16,9 @@ import Cookies from "js-cookie";
 import { Loader2 } from "lucide-react";
 import * as React from "react";
 
-import { loginUser } from "@/api";
-import { LoginResponseDto } from "@/Dtos/authDtos";
+import { useLogin } from "@/lib/hooks";
+import { useUser } from "@/Providers/UserProvider";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -39,6 +38,7 @@ export function LoginForm({
 }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const { setUser } = useUser();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -48,14 +48,11 @@ export function LoginForm({
     },
   });
 
-  const { mutate } = useMutation({
-    mutationFn: async (
-      values: z.infer<typeof LoginSchema>
-    ): Promise<LoginResponseDto> => await loginUser(values),
-    onMutate: () => {
+  const { login } = useLogin(
+    () => {
       setIsLoading(true);
     },
-    onSuccess: (data) => {
+    (data: any) => {
       Cookies.set("jwtToken", data.response.jwtToken, {
         expires: 7,
         sameSite: "strict",
@@ -64,22 +61,23 @@ export function LoginForm({
         expires: 7,
         sameSite: "strict",
       });
+      setUser(data.response.user);
       setIsLoading(false);
       localStorage.setItem("user", JSON.stringify(data.response.user));
       toast.success("Logged in successfully");
       router.push("/");
     },
-    onError: () => {
+    () => {
       setIsLoading(false);
       toast.error("User not found or error");
-    },
-  });
+    }
+  );
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => mutate(data))}
+          onSubmit={form.handleSubmit((data) => login(data))}
           className="space-y-8 flex flex-col items-center justify-center"
         >
           <FormField

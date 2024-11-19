@@ -16,9 +16,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
-import { registerUser } from "@/api";
+import { useRegister } from "@/lib/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -52,25 +51,22 @@ export function RegisterForm({
     },
   });
 
-  const { mutate } = useMutation({
-    mutationFn: async (
-      values: z.infer<typeof RegisterSchema>
-    ): Promise<{ message: string }> => await registerUser(values),
-    onMutate: () => {
+  const { register } = useRegister(
+    () => {
       setIsLoading(true);
     },
-    onSuccess: (data) => {
+    (data) => {
       setIsLoading(false);
       toast.success(data.message);
       router.push("/auth/login");
-    },
-  });
+    }
+  );
 
   return (
     <div className={cn("grid gap-6", className)} {...props}>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit((data) => mutate(data))}
+          onSubmit={form.handleSubmit((data) => register(data))}
           className="space-y-8 flex flex-col items-center justify-center"
         >
           <FormField
