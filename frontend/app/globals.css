@@ -76,3 +76,9 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .bg-showcase {
+    @apply bg-gradient-to-b from-indigo-500 to-purple-600;
+  }
+}

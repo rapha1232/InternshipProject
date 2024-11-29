@@ -7,20 +7,21 @@ import { Separator } from "../ui/separator";
 
 export default function BookCard({ book }: { book: BookDto }) {
   return (
-    <Card className="h-full max-w-[400px]">
+    <Card className="h-full max-w-[400px] group overflow-hidden">
       <Link href={`/books/${book.id}`} prefetch={false}>
         <Image
           src={book.bookImageUrl}
           width={300}
           height={400}
           alt={`${book.title}`}
-          className="rounded-t-lg object-cover w-full aspect-[3/4]"
+          loader={({ src }) => src}
+          className="rounded-t-lg object-cover w-full aspect-[3/4] transform transition-transform duration-300 ease-in-out group-hover:scale-110"
         />
       </Link>
       <CardContent className="p-4">
         <div className="mb-2">
           <Link
-            href="#"
+            href={`/books/${book.id}`}
             className="text-lg font-bold hover:underline"
             prefetch={false}
           >
@@ -28,7 +29,12 @@ export default function BookCard({ book }: { book: BookDto }) {
           </Link>
           <p className="text-muted-foreground">
             Written by:{" "}
-            <span className="text-violet-600">{book.author.name}</span>
+            <Link
+              className="text-violet-600"
+              href={`/authors/${book.author.id}`}
+            >
+              {book.author.name}
+            </Link>
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm">

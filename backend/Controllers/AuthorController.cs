@@ -5,6 +5,7 @@ using InternshipBacked.Data;
 using AutoMapper;
 using InternshipBackend.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.VisualBasic;
 
 namespace InternshipBacked.Controllers
 {
@@ -57,7 +58,16 @@ namespace InternshipBacked.Controllers
                 }
 
                 var authorDto = _mapper.Map<AuthorDto>(author);
-                return Ok(new { message = "success", author = authorDto });
+                var bookReviews = await _context.Reviews.Where(r => author.Books.Select(b => b.Id).Contains(r.BookId)).ToListAsync();
+                var books = _mapper.Map<IEnumerable<BookWithoutAuthorDto>>(author.Books);
+                foreach (var book in books)
+                {
+                    var reviewsForBook = bookReviews.Where(r => r.BookId == book.Id);
+                    book.AverageRating = reviewsForBook.Any() ? reviewsForBook.Average(r => r.Rating) : 0;
+                    book.ReviewLen = reviewsForBook.Count();
+                }
+
+                return Ok(new { message = "success", author = authorDto, books });
             }
             catch (Exception ex)
             {

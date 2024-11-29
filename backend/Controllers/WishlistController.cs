@@ -5,6 +5,7 @@ using InternshipBackend.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using AutoMapper;
+using InternshipBacked.Data;
 
 
 namespace InternshipBacked.Controllers
@@ -32,19 +33,14 @@ namespace InternshipBacked.Controllers
             }
 
             var wishlist = user.Wishlist;
-            if (wishlist == null)
+
+            if (wishlist == null || !wishlist.Any())
             {
-                return NotFound(new { message = "User has no wishlist" });
+                return Ok(new { message = "User has no wishlist", wishlist = new List<WishlistItemWithoutUserDto>() });
             }
 
-            var wishlistResult = wishlist.Select(item => new
-            {
-                item.Id,
-                item.BookId,
-                item.Read
-            }).ToList();
 
-            return Ok(new { message = "Success", wishlistResult });
+            return Ok(new { message = "Success", wishlist = _mapper.Map<List<WishlistItemWithoutUserDto>>(wishlist) });
         }
 
         [HttpPost]
@@ -105,7 +101,7 @@ namespace InternshipBacked.Controllers
             wishlistItem.Read = readStatus;
             await _userManager.UpdateAsync(user);
 
-            return Ok(new { message = "Read status updated", wishlistItem });
+            return Ok(new { message = "Read status updated", wishlistItem = _mapper.Map<WishlistItemWithoutUserDto>(wishlistItem) });
         }
 
         [HttpDelete("{wishlistItemId:Guid}")]
@@ -126,7 +122,7 @@ namespace InternshipBacked.Controllers
             user.Wishlist.Remove(wishlistItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok(new { message = "Wishlist item removed", wishlistItem });
+            return Ok(new { message = "Wishlist item removed", wishlistItem = _mapper.Map<WishlistItemWithoutUserDto>(wishlistItem) });
         }
     }
 }

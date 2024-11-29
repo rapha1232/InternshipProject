@@ -5,6 +5,7 @@ using InternshipBacked.Data;
 using AutoMapper;
 using InternshipBackend.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
+using InternshipBacked.Services;
 
 namespace InternshipBacked.Controllers
 {
@@ -16,10 +17,12 @@ namespace InternshipBacked.Controllers
 
         private readonly BookDBContext _context;
         private readonly IMapper _mapper;
-        public BookController(BookDBContext context, IMapper mapper)
+        private IFileService _fileService;
+        public BookController(BookDBContext context, IMapper mapper, IFileService fileService)
         {
             _context = context;
             _mapper = mapper;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -28,6 +31,40 @@ namespace InternshipBacked.Controllers
             try
             {
                 var books = await _context.Books.Include(b => b.Author).Include(b => b.Reviews).ToListAsync();
+
+                if (books == null || !books.Any())
+                {
+                    return NotFound(new { message = "No books found." });
+                }
+
+                // Map books to BookDto with additional calculations for average rating and review count
+                var booksDto = books.Select(book => new BookDto
+                {
+                    Id = book.Id,
+                    Title = book.Title,
+                    Description = book.Description,
+                    Summary = book.Summary,
+                    Author = _mapper.Map<AuthorWithoutBooksDto>(book.Author),
+                    BookImageUrl = book.BookImageUrl,
+                    toBeShown = book.toBeShown,
+                    AverageRating = book.Reviews.Any() ? book.Reviews.Average(r => r.Rating) : (double?)null,
+                    Reviews = book.Reviews.Select(r => _mapper.Map<ReviewWithoutBookDto>(r)).ToList()
+                });
+
+                return Ok(new { message = "success", books = booksDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving books.", details = ex.Message });
+            }
+        }
+
+        [HttpGet("published")]
+        public async Task<IActionResult> GetAllPublishedBooks()
+        {
+            try
+            {
+                var books = await _context.Books.Include(b => b.Author).Include(b => b.Reviews).Where(b => b.toBeShown).ToListAsync();
 
                 if (books == null || !books.Any())
                 {
@@ -78,11 +115,26 @@ namespace InternshipBacked.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateBook([FromBody] CreateBookRequestDto createBookRequestDto)
+        public async Task<IActionResult> CreateBook([FromForm] CreateBookRequestDto createBookRequestDto)
         {
             try
             {
-                var book = _mapper.Map<Book>(createBookRequestDto);
+                if (createBookRequestDto.BookImage?.Length > 4 * 1024 * 1024)
+                {
+                    return BadRequest(new { message = "File size should not exceed 4 MB" });
+                }
+                string[] allowedFileExtentions = [".jpg", ".jpeg", ".png"];
+                string createdImageName = await _fileService.SaveFileAsync(createBookRequestDto.BookImage, allowedFileExtentions);
+
+                var book = new Book()
+                {
+                    Title = createBookRequestDto.Title,
+                    Description = createBookRequestDto.Description,
+                    Summary = createBookRequestDto.Summary,
+                    BookImageUrl = createdImageName,
+                    toBeShown = false,
+                    AuthorId = createBookRequestDto.AuthorId,
+                };
                 await _context.Books.AddAsync(book);
                 await _context.SaveChangesAsync();
 
@@ -177,12 +229,12 @@ namespace InternshipBacked.Controllers
                     return NotFound(new { message = "Book not found." });
                 }
 
-                book.toBeShown = true;
+                book.toBeShown = !book.toBeShown;
                 _context.Books.Update(book);
                 await _context.SaveChangesAsync();
 
                 var bookDto = _mapper.Map<BookDto>(book);
-                return Ok(new { message = "success", book = bookDto });
+                return Ok(new { message = "success, book set to " + (book.toBeShown == true ? "Published" : "Not Published"), book = bookDto });
             }
             catch (Exception ex)
             {

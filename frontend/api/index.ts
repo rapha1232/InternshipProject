@@ -1,6 +1,7 @@
 import { LoginDto, RegisterDto } from "@/Dtos/authDtos";
 import Cookies from "js-cookie";
 import { env } from "process";
+import { toast } from "sonner";
 
 const api_endpoint = env.API_ENDPOINT || "https://localhost:7060/api/";
 async function refreshAccessToken(): Promise<boolean> {
@@ -28,12 +29,17 @@ async function refreshAccessToken(): Promise<boolean> {
       console.log("✅ Token refreshed successfully 👾");
       return true;
     } else {
-      console.error("🔴 Error refreshing token:", response.statusText);
+      const data = await response.json();
+      console.log(data);
+      console.error("🔴 Error refreshing token:", data.message);
+      toast.error("🔴 Error refreshing token " + data.message);
+      return false;
     }
   } catch (error) {
     console.error("🔴 Error refreshing token:", error);
+    toast.error("🔴 Error refreshing token " + error);
+    return false;
   }
-  return false;
 }
 
 export async function getData(url: string) {
@@ -114,7 +120,8 @@ export async function putData(url: string, opts: { body: any }) {
     },
     body: "",
   };
-  if (opts.body) options.body = JSON.stringify(opts.body);
+  if (opts.body !== undefined || opts.body !== null)
+    options.body = JSON.stringify(opts.body);
   let response = await fetch(`${api_endpoint}${url}`, options);
 
   if (response.status === 401) {
@@ -163,17 +170,27 @@ export async function deleteData(url: string) {
   return data;
 }
 
-export async function postData(url: string, opts: { body: any }) {
+export async function postData(
+  url: string,
+  opts: { body: any },
+  contentType?: string
+) {
   let accessToken = Cookies.get("jwtToken");
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: "",
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${accessToken}`,
   };
-  if (opts.body) options.body = JSON.stringify(opts.body);
+
+  // Only set Content-Type if it's not multipart/form-data
+  if (contentType && contentType !== "multipart/form-data") {
+    headers["Content-Type"] = contentType;
+  }
+
+  const options: RequestInit = {
+    method: "POST",
+    headers,
+    body: opts.body,
+  };
+
   let response = await fetch(`${api_endpoint}${url}`, options);
 
   if (response.status === 401) {
@@ -181,10 +198,7 @@ export async function postData(url: string, opts: { body: any }) {
     if (refreshSuccess) {
       // Retry the original request with the new access token
       accessToken = Cookies.get("jwtToken");
-      options.headers = {
-        ...options.headers,
-        Authorization: `Bearer ${accessToken}`,
-      };
+      headers.Authorization = `Bearer ${accessToken}`;
       response = await fetch(`${api_endpoint}${url}`, options);
     }
   }
@@ -192,9 +206,3 @@ export async function postData(url: string, opts: { body: any }) {
   const data = await response.json();
   return data;
 }
-
-export const handleLogout = () => {
-  localStorage.removeItem("user");
-  Cookies.remove("jwtToken");
-  Cookies.remove("refreshToken");
-};

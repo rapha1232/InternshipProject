@@ -27,7 +27,7 @@ interface FilterOption {
 interface FilterBoxProps {
   title: string;
   options: FilterOption[];
-  setFilterValue: (
+  setFilterValue?: (
     value: string | ((old: string) => string | null) | null,
     options?: Options | undefined
   ) => Promise<URLSearchParams>;
@@ -53,10 +53,14 @@ export function DataTableFilterBox({
     } else {
       newSet.add(value);
     }
-    setFilterValue(Array.from(newSet).join(".") || null);
+    setFilterValue && setFilterValue(Array.from(newSet).join(".") || null);
   };
 
-  const resetFilter = () => setFilterValue(null);
+  const resetFilter = () => {
+    if (setFilterValue) {
+      setFilterValue(null);
+    }
+  };
 
   return (
     <Popover>

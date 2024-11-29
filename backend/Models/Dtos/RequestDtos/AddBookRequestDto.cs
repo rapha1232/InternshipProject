@@ -17,7 +17,7 @@ namespace InternshipBackend.Models.Dtos
         [Required(ErrorMessage = "Summary is required")]
         [DataType(DataType.Text)]
         public required string Summary { get; set; }
-        public string? BookImageUrl { get; set; }
+        public IFormFile? BookImageFile { get; set; }
         public bool toBeShown { get; set; }
 
         [Required(ErrorMessage = "Author's Name is required")]

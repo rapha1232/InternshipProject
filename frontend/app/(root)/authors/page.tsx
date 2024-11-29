@@ -1,5 +1,11 @@
+import AuthorsList from "@/components/Authors/AuthorList";
+
 const AuthorsPage = () => {
-  return <div>AuthorsPage</div>;
+  return (
+    <>
+      <AuthorsList />
+    </>
+  );
 };
 
 export default AuthorsPage;

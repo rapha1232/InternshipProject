@@ -15,7 +15,7 @@ public class Book
     public Guid AuthorId { get; set; }
 
     // Navigation property to reference the Author of the Book
-    public virtual required Author Author { get; set; }
+    public virtual Author Author { get; set; }
 
     // Navigation property to reference the Reviews of the Book
     public virtual ICollection<Review> Reviews { get; set; }

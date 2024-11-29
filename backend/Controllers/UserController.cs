@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using InternshipBackend.CustomActionFilters;
 using InternshipBackend.Models.Domain;
 using AutoMapper;
+using System.Web;
 
 namespace InternshipBacked.Controllers
 {
@@ -42,6 +43,19 @@ namespace InternshipBacked.Controllers
             if (appUser != null)
             {
                 return Ok(new { message = "Success", user = _mapper.Map<ApplicationUserDto>(appUser) });
+            }
+            return BadRequest(new { message = "User not found!" });
+        }
+
+        [HttpGet]
+        [Route("get-username/{id:Guid}")]
+        [ValidateModel]
+        public async Task<IActionResult> GetUserName([FromRoute] Guid id)
+        {
+            var appUser = await _userManager.FindByIdAsync(id.ToString());
+            if (appUser != null)
+            {
+                return Ok(new { message = "Success", appUser.UserName });
             }
             return BadRequest(new { message = "User not found!" });
         }
@@ -165,14 +179,20 @@ namespace InternshipBacked.Controllers
                 return BadRequest(new { message = "User not found!" });
             }
 
+            // Generate a password reset token
             var token = await _userManager.GeneratePasswordResetTokenAsync(appUser);
-            var resetLink = Url.Action("ResetPassword", "User", new { token, email = generateResetTokenRequestDto.Email }, Request.Scheme);
+            var encodedCode = HttpUtility.UrlEncode(token);
 
+            // Construct the reset link for the frontend (pointing to localhost:3000)
+            var resetLink = $"http://localhost:3000/auth/reset-password/verify?token={encodedCode}&email={generateResetTokenRequestDto.Email}";
+
+            // Construct the email message
             var message = $"Please reset your password using the following link: {resetLink}";
 
+            // Send the email
             await _emailSender.SendEmailAsync(generateResetTokenRequestDto.Email, "Password Reset Token", message);
 
-            return Ok(new { message = "Success", token });
+            return Ok(new { message = "Success" });
         }
     }
 }

@@ -7,6 +7,8 @@ using InternshipBacked.Data;
 using InternshipBacked.Repositories;
 using InternshipBacked.Mappings;
 using InternshipBackend.Models.Domain;
+using InternshipBacked.Services;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -29,6 +31,8 @@ builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
+
+builder.Services.AddTransient<IFileService, FileService>();
 
 
 builder.Services.AddIdentityCore<ApplicationUser>()
@@ -97,6 +101,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
 app.MapControllers();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(Directory.GetCurrentDirectory(), "Uploads")),
+    RequestPath = "/uploads"
+});
 
 
 // app.UseCors(MyAllowSpecificOrigins);

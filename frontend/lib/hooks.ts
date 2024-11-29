@@ -9,8 +9,14 @@ import {
 import { LoginResponseDto } from "@/Dtos/authDtos";
 import {
   ApplicationUser,
+  FavoriteWithoutUserDto,
+  GetAllAuthorsResponse,
   GetAllBooksResponse,
+  GetAllReviewsResponse,
+  GetSingleAuthorResponse,
   GetSingleBookResponse,
+  GetSingleUserResponse,
+  WishlistItemWithoutUserDto,
 } from "@/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -40,11 +46,35 @@ export const useGetSingleBook = (bookId: string) =>
       await getData(`Book/${bookId}`),
     queryKey: ["oneBook", bookId],
   });
+export const useGetSingleAuthor = (authorId: string) =>
+  useQuery({
+    queryFn: async (): Promise<GetSingleAuthorResponse> =>
+      await getData(`Author/${authorId}`),
+    queryKey: ["oneAuthor", authorId],
+  });
 
 export const useGetAllBooks = () =>
   useQuery({
     queryFn: async (): Promise<GetAllBooksResponse> => await getData("Book"),
     queryKey: ["allBooks"],
+  });
+export const useGetAllPublishedBooks = () =>
+  useQuery({
+    queryFn: async (): Promise<GetAllBooksResponse> =>
+      await getData("Book/published"),
+    queryKey: ["allPublishedBooks"],
+  });
+export const useGetAllAuthors = () =>
+  useQuery({
+    queryFn: async (): Promise<GetAllAuthorsResponse> =>
+      await getData("Author"),
+    queryKey: ["allAuthors"],
+  });
+export const useGetAllReviews = () =>
+  useQuery({
+    queryFn: async (): Promise<GetAllReviewsResponse> =>
+      await getData("Reviews"),
+    queryKey: ["allReviews"],
   });
 
 export const useAddToWishlist = (
@@ -67,20 +97,37 @@ export const useAddToWishlist = (
 };
 
 export const useRemoveFromWishlist = (
-  bookId: string,
   user: ApplicationUser,
   onSuccess: onSuccess,
   onError: onError
 ) => {
   const { mutate: removeFromWishlist } = useMutation({
-    mutationFn: async (): Promise<{ message: string }> => {
-      const wishlistItem = user.wishlist.find((w) => w.bookId === bookId);
-      if (!wishlistItem) throw new Error("Item not found in wishlist.");
-      return await deleteData(`Wishlist/${wishlistItem.id}`);
+    mutationFn: async (options: {
+      wishlistItemId?: string;
+      bookId?: string;
+    }): Promise<{
+      message: string;
+      wishlistItem?: WishlistItemWithoutUserDto;
+    }> => {
+      const { wishlistItemId, bookId } = options;
+      if (bookId) {
+        // Find the wishlist item by bookId
+        const wishlistItem = user.wishlist.find((w) => w.bookId === bookId);
+        if (!wishlistItem) {
+          throw new Error("Item not found in wishlist.");
+        }
+        return await deleteData(`Wishlist/${wishlistItem.id}`);
+      } else if (wishlistItemId) {
+        // Use the provided wishlistItemId
+        return await deleteData(`Wishlist/${wishlistItemId}`);
+      } else {
+        throw new Error("Either bookId or wishlistItemId must be provided.");
+      }
     },
     onSuccess,
     onError,
   });
+
   return { removeFromWishlist };
 };
 
@@ -196,4 +243,157 @@ export const useRegister = (onMutate: onMutate, onSuccess: onSuccess) => {
   });
 
   return { register };
+};
+
+export const useAddToFavorite = (
+  bookId: string,
+  userId: string,
+  onSuccess: onSuccess,
+  onError: onError
+) => {
+  const { mutate: addToFavorite } = useMutation({
+    mutationFn: async (): Promise<{ message: string; favItem: any }> =>
+      await postData("Favorites", { body: { userId, bookId } }),
+    onSuccess,
+    onError,
+  });
+
+  return { addToFavorite };
+};
+
+export const useRemoveFromFavorite = (
+  user: ApplicationUser,
+  onSuccess: onSuccess,
+  onError: onError
+) => {
+  const { mutate: removeFromFavorite } = useMutation({
+    mutationFn: async (options: {
+      favoriteItemId?: string;
+      bookId?: string;
+    }): Promise<{
+      message: string;
+      favoriteItem?: FavoriteWithoutUserDto;
+    }> => {
+      const { favoriteItemId, bookId } = options;
+
+      if (bookId) {
+        // Find the favorite item by bookId
+        const favoriteItem = user.favorites.find((f) => f.bookId === bookId);
+        if (!favoriteItem) {
+          throw new Error("Item not found in favorites.");
+        }
+        return await deleteData(`Favorites/${favoriteItem.id}`);
+      } else if (favoriteItemId) {
+        // Use the provided favoriteItemId
+        return await deleteData(`Favorites/${favoriteItemId}`);
+      } else {
+        throw new Error("Either bookId or favoriteItemId must be provided.");
+      }
+    },
+    onSuccess,
+    onError,
+  });
+
+  return { removeFromFavorite };
+};
+
+export const useGetSingleUser = (userId: string) =>
+  useQuery({
+    queryFn: async (): Promise<GetSingleUserResponse> =>
+      await getData(`User/${userId}`),
+    queryKey: ["oneUser", userId],
+  });
+export const useGetUserName = (userId: string) =>
+  useQuery({
+    queryFn: async (): Promise<{ message: string; userName: string }> =>
+      await getData(`User/get-username/${userId}`),
+    queryKey: ["oneUserName", userId],
+  });
+
+export const useGetWishlist = (userId: string) =>
+  useQuery({
+    queryFn: async (): Promise<{ message: string; wishlist?: any[] }> =>
+      await getData(`Wishlist/${userId}`).then(async (res) => {
+        let wishlist: any[] = [];
+        for (const item of res.wishlist) {
+          const book: GetSingleBookResponse = await getData(
+            `Book/${item.bookId}`
+          );
+          if (book.book)
+            wishlist.push({ id: item.id, read: item.read, book: book.book });
+        }
+        return { message: res.message, wishlist };
+      }),
+    queryKey: ["wishlist", userId],
+  });
+export const useGetFavorites = (userId: string) =>
+  useQuery({
+    queryFn: async (): Promise<{ message: string; favorites?: any[] }> =>
+      await getData(`Favorites/${userId}`).then(async (res) => {
+        let favorites: any[] = [];
+        for (const item of res.favorites) {
+          const book: GetSingleBookResponse = await getData(
+            `Book/${item.bookId}`
+          );
+          if (book.book) favorites.push({ id: item.id, book: book.book });
+        }
+        return { message: res.message, favorites };
+      }),
+    queryKey: ["favorites", userId],
+  });
+
+export const useSetReadStatus = (onSuccess: onSuccess, onError: onError) => {
+  const { mutate: setReadStatus } = useMutation({
+    mutationFn: async ({
+      id,
+      read,
+    }: {
+      id: string;
+      read: boolean;
+    }): Promise<{ message: string }> =>
+      await putData(`Wishlist/setReadStatus/${id}`, {
+        body: read,
+      }),
+    onSuccess,
+    onError,
+  });
+
+  return { setReadStatus };
+};
+
+export const useChangePassword = (
+  userId: string,
+  onMutate: onMutate,
+  onSuccess: onSuccess,
+  onError: onError
+) => {
+  const { mutate: changePassword } = useMutation({
+    mutationFn: async (values: {
+      oldPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    }): Promise<{ message: string }> =>
+      await putData(`User/change-password/${userId}`, { body: values }),
+    onMutate,
+    onSuccess,
+    onError,
+  });
+
+  return { changePassword };
+};
+
+export const useResetPasswordRequest = (
+  onMutate: onMutate,
+  onSuccess: onSuccess,
+  onError: onError
+) => {
+  const { mutate: resetPasswordRequest } = useMutation({
+    mutationFn: async (email: string): Promise<{ message: string }> =>
+      await postData("User/generate-reset-token", { body: { email } }),
+    onMutate,
+    onSuccess,
+    onError,
+  });
+
+  return { resetPasswordRequest };
 };

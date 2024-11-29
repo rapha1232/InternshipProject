@@ -10,5 +10,7 @@ namespace InternshipBackend.Models.Dtos
         public required string Summary { get; set; }
         public string? BookImageUrl { get; set; }
         public bool toBeShown { get; set; }
+        public double AverageRating { get; set; }
+        public double ReviewLen { get; set; }
     }
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { filterBooks } from "@/lib/filtering";
-import { useGetAllBooks } from "@/lib/hooks";
+import { useGetAllPublishedBooks } from "@/lib/hooks";
 import { sortBooks } from "@/lib/sorting";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import AddBookDialog from "../CreateBookDialog";
 import LoadingErrorState from "./LoadingErrorState";
 import SearchParams from "./Parameters";
 
@@ -22,7 +23,7 @@ export default function BookList() {
     searchParams?.get("sort") || "title-asc"
   );
 
-  const { data, isLoading, isError, isSuccess } = useGetAllBooks();
+  const { data, isLoading, isError, isSuccess } = useGetAllPublishedBooks();
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -54,14 +55,18 @@ export default function BookList() {
   return (
     <div className="flex flex-col mx-10">
       <div className="flex flex-col gap-6 mx-8">
-        <SearchParams
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          ratingFilter={ratingFilter}
-          setRatingFilter={updateFilter}
-          sortOption={sortOption}
-          setSortOption={setSortOption}
-        />
+        <div className="flex gap-6 items-center">
+          <SearchParams
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            ratingFilter={ratingFilter}
+            setRatingFilter={updateFilter}
+            sortOption={sortOption}
+            setSortOption={setSortOption}
+            page="books"
+          />
+          <AddBookDialog />
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <LoadingErrorState
             isLoading={isLoading}

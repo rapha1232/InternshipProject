@@ -8,13 +8,14 @@ import Sorting from "./Sorting";
 interface SearchParamsProps {
   searchQuery: string;
   setSearchQuery: (value: string) => void;
-  ratingFilter: string;
-  setRatingFilter: (
+  ratingFilter?: string;
+  setRatingFilter?: (
     value: string | ((old: string) => string | null) | null,
     options?: Options | undefined
   ) => Promise<URLSearchParams>;
   sortOption: string;
   setSortOption: (value: string) => void;
+  page: string;
 }
 
 export default function SearchParams({
@@ -24,10 +25,13 @@ export default function SearchParams({
   setRatingFilter,
   sortOption,
   setSortOption,
+  page,
 }: SearchParamsProps) {
   const handleClear = () => {
     setSearchQuery("");
-    setRatingFilter("");
+    if (setRatingFilter) {
+      setRatingFilter("");
+    }
     setSortOption("title-asc"); // Reset to default sort
 
     // Clear URL search parameters
@@ -51,13 +55,23 @@ export default function SearchParams({
 
       {/* Filters and Sorting */}
       <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-        <DataTableFilterBox
-          title="Rating"
-          options={filterOptions.rating}
-          filterValue={ratingFilter}
-          setFilterValue={(value) => setRatingFilter(value)}
+        {page === "books" && (
+          <DataTableFilterBox
+            title="Rating"
+            options={filterOptions.rating}
+            filterValue={ratingFilter || ""}
+            setFilterValue={(value) =>
+              setRatingFilter
+                ? setRatingFilter(value)
+                : Promise.resolve(new URLSearchParams())
+            }
+          />
+        )}
+        <Sorting
+          sortOption={sortOption}
+          setSortOption={setSortOption}
+          page={page}
         />
-        <Sorting sortOption={sortOption} setSortOption={setSortOption} />
         <Button
           variant="outline"
           onClick={handleClear}

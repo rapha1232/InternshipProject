@@ -1,4 +1,4 @@
-import { BookDto } from "@/types";
+import { AuthorDto, BookDto } from "@/types";
 
 export const filterBooks = (
   books: BookDto[],
@@ -18,4 +18,13 @@ export const filterBooks = (
 
     return matchesSearch && matchesRating;
   });
+};
+
+export const filterAuthors = (
+  authors: AuthorDto[],
+  searchQuery: string
+): AuthorDto[] => {
+  return authors.filter((author) =>
+    author.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 };

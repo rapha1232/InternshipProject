@@ -19,6 +19,7 @@ import * as React from "react";
 import { useLogin } from "@/lib/hooks";
 import { useUser } from "@/Providers/UserProvider";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -38,7 +39,7 @@ export function LoginForm({
 }: React.HTMLAttributes<HTMLDivElement>) {
   const router = useRouter();
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
-  const { setUser } = useUser();
+  const { setUser, setIsAdmin } = useUser();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
@@ -62,6 +63,16 @@ export function LoginForm({
         sameSite: "strict",
       });
       setUser(data.response.user);
+      if (data.response.jwtToken) {
+        const decoded: { [key: string]: any } = jwtDecode(
+          data.response.jwtToken
+        );
+        const role =
+          decoded[
+            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          ];
+        setIsAdmin(role === "admin");
+      }
       setIsLoading(false);
       localStorage.setItem("user", JSON.stringify(data.response.user));
       toast.success("Logged in successfully");

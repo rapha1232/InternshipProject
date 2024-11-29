@@ -18,6 +18,7 @@ import { Loader2 } from "lucide-react";
 
 import { useRegister } from "@/lib/hooks";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -121,6 +122,7 @@ export function RegisterForm({
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Register
           </Button>
+          <Link href="/auth/reset-password">Forgot Password?</Link>
         </form>
       </Form>
       <div className="relative">

@@ -1,5 +1,4 @@
 "use client";
-import { handleLogout } from "@/api";
 import { useUser } from "@/Providers/UserProvider";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,7 +14,7 @@ import {
 import SignedIn from "./SignedIn";
 
 const ProfileButton = () => {
-  const { loading } = useUser();
+  const { loading, logout } = useUser();
   const router = useRouter();
   return (
     <>
@@ -27,8 +26,12 @@ const ProfileButton = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-10 w-10 cursor-pointer flex items-center justify-center hover:text-accent-foreground rounded-full transition-colors">
-                  <AvatarImage src="/avatar.svg" alt="@shadcn" />
-                  <AvatarFallback className="bg-violet-600 ">
+                  <AvatarImage
+                    src="/icons/avatar.svg"
+                    alt="@shadcn"
+                    className="size-3/4"
+                  />
+                  <AvatarFallback className="bg-showcase">
                     {user.userName[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -39,15 +42,14 @@ const ProfileButton = () => {
                 <DropdownMenuItem onClick={() => router.push("/profile")}>
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/setting")}>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="bg-red-600 focus:bg-red-700"
                   onClick={() => {
-                    handleLogout();
-                    router.push("/auth/login");
+                    logout();
                   }}
                 >
                   Logout

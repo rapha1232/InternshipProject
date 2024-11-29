@@ -5,6 +5,7 @@ using InternshipBackend.Models.Dtos;
 using InternshipBacked.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace InternshipBacked.Controllers
 {
@@ -14,9 +15,11 @@ namespace InternshipBacked.Controllers
     public class FavoritesController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        public FavoritesController(UserManager<ApplicationUser> userManager)
+        private readonly IMapper _mapper;
+        public FavoritesController(UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         [HttpGet("{userId:Guid}")]
@@ -34,11 +37,7 @@ namespace InternshipBacked.Controllers
                 return NotFound(new { message = "User has no favorites" });
             }
 
-            var favsResult = favs.Select(item => new
-            {
-                item.Id,
-                item.BookId,
-            }).ToList();
+            var favsResult = _mapper.Map<List<FavoriteWithoutUserDto>>(favs);
 
             return Ok(new { message = "Success", favorites = favsResult });
         }
@@ -61,17 +60,18 @@ namespace InternshipBacked.Controllers
                 return BadRequest(new { message = "This book is already in the user's favorites" });
             }
 
-            var favsItem = new Favorite
+            var favItem = new Favorite
             {
-                Id = Guid.NewGuid(),
                 UserId = addToFavoritesRequestDto.UserId,
                 BookId = addToFavoritesRequestDto.BookId,
             };
 
-            user.Favorites.Add(favsItem);
+            user.Favorites.Add(favItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok(new { message = "Book added to favorites" });
+            var favItemRes = _mapper.Map<FavoriteWithoutUserDto>(favItem);
+
+            return Ok(new { message = "Book added to favorites", favItem = favItemRes });
         }
 
         [HttpDelete("{favsItemId:Guid}")]
@@ -83,16 +83,18 @@ namespace InternshipBacked.Controllers
                 return NotFound(new { message = "User with this favotite item not found" });
             }
 
-            var favsItem = user.Favorites.FirstOrDefault(w => w.Id == favsItemId);
-            if (favsItem == null)
+            var favItem = user.Favorites.FirstOrDefault(w => w.Id == favsItemId);
+            if (favItem == null)
             {
                 return NotFound(new { message = "Favorites item not found" });
             }
 
-            user.Favorites.Remove(favsItem);
+            user.Favorites.Remove(favItem);
             await _userManager.UpdateAsync(user);
 
-            return Ok(new { message = "Favorites item removed" });
+            var favItemRes = _mapper.Map<FavoriteWithoutUserDto>(favItem);
+
+            return Ok(new { message = "Favorites item removed", favItem = favItemRes });
         }
     }
 }

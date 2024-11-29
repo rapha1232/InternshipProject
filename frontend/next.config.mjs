@@ -7,6 +7,12 @@ const nextConfig = {
         protocol: "https",
         hostname: "d28hgpri8am2if.cloudfront.net",
       },
+      {
+        protocol: "https",
+        hostname: "localhost",
+        port: "7060",
+        pathname: "/Uploads/**",
+      },
     ],
   },
 };

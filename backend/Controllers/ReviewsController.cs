@@ -26,6 +26,28 @@ namespace InternshipBacked.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetAllReviews()
+        {
+            try
+            {
+                var reviews = await _dbContext.Reviews.ToListAsync();
+
+                if (reviews == null || !reviews.Any())
+                {
+                    return NotFound(new { message = "No reviews found." });
+                }
+
+                var reviewsDto = _mapper.Map<List<ReviewWithoutBookDto>>(reviews);
+
+                return Ok(new { message = "success", reviews = reviewsDto });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving reviews.", details = ex.Message });
+            }
+        }
+
         [HttpGet("{bookId:Guid}")]
         public async Task<ActionResult> GetBookReviews([FromRoute] Guid bookId)
         {

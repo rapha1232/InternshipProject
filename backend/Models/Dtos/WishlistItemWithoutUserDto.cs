@@ -1,3 +1,5 @@
+using InternshipBackend.Models.Domain;
+
 namespace InternshipBackend.Models.Dtos;
 public class WishlistItemWithoutUserDto
 {
