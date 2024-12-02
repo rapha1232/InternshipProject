@@ -12,10 +12,10 @@ public class Book
     public bool toBeShown { get; set; }
 
     // Foreign key to link to Author
-    public Guid AuthorId { get; set; }
+    public Guid? AuthorId { get; set; }
 
     // Navigation property to reference the Author of the Book
-    public virtual Author Author { get; set; }
+    public virtual Author? Author { get; set; }
 
     // Navigation property to reference the Reviews of the Book
     public virtual ICollection<Review> Reviews { get; set; }

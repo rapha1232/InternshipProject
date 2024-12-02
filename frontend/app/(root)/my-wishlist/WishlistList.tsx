@@ -139,6 +139,7 @@ const WishlistItem = ({
         width={100}
         height={150}
         className="rounded-lg object-cover w-[100px] h-[150px]"
+        loader={({ src }) => src}
       />
       <div className="ml-4 flex-1">
         <h2 className="text-lg font-semibold">
@@ -147,13 +148,19 @@ const WishlistItem = ({
           </Link>
         </h2>
         <p className="text-sm text-muted-foreground">
-          by{" "}
-          <Link
-            href={`/authors/${item.book.author.id}`}
-            className="text-violet-600 hover:underline"
-          >
-            {item.book.author.name}
-          </Link>
+          {item.book.author ? (
+            <>
+              <span>by </span>
+              <Link
+                href={`/authors/${item.book.author.id}`}
+                className="text-violet-600 hover:underline"
+              >
+                {item.book.author.name}
+              </Link>
+            </>
+          ) : (
+            "Author not found"
+          )}
         </p>
         <Link
           href={`/books/${item.book.id}`}

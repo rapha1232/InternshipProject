@@ -117,6 +117,10 @@ namespace InternshipBacked.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBook([FromForm] CreateBookRequestDto createBookRequestDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
             try
             {
                 if (createBookRequestDto.BookImage?.Length > 4 * 1024 * 1024)
@@ -133,7 +137,7 @@ namespace InternshipBacked.Controllers
                     Summary = createBookRequestDto.Summary,
                     BookImageUrl = createdImageName,
                     toBeShown = false,
-                    AuthorId = createBookRequestDto.AuthorId,
+                    AuthorId = Guid.Empty == createBookRequestDto.AuthorId ? null : createBookRequestDto.AuthorId,
                 };
                 await _context.Books.AddAsync(book);
                 await _context.SaveChangesAsync();
@@ -186,8 +190,9 @@ namespace InternshipBacked.Controllers
 
                 _context.Books.Remove(book);
                 await _context.SaveChangesAsync();
+                if (!string.IsNullOrEmpty(book.BookImageUrl)) _fileService.DeleteFile(book.BookImageUrl.Split("/Uploads/")[1]);
 
-                return Ok(new { message = "Book deleted successfully." });
+                return Ok(new { message = "success" });
             }
             catch (Exception ex)
             {

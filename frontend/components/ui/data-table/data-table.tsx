@@ -45,6 +45,7 @@ interface DataTableProps<TData, TValue> {
     }[];
   }[];
   onPublishedChange?: (id: string, value: boolean) => void;
+  tableName: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -52,6 +53,7 @@ export function DataTable<TData, TValue>({
   data,
   search,
   filters,
+  tableName,
   onPublishedChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -79,7 +81,12 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar table={table} search={search} filters={filters} />
+      <DataTableToolbar
+        table={table}
+        search={search}
+        filters={filters}
+        tableName={tableName}
+      />
       <div className="rounded-md border">
         <Table>
           <TableHeader>

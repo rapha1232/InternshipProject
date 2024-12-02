@@ -1,6 +1,6 @@
 "use client";
 
-import { postData } from "@/api";
+import { postData, putData } from "@/api";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -34,7 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useGetAllAuthors } from "@/lib/hooks";
+import { useGetAllBooks } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,84 +45,107 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const AddBookSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string(),
-  summary: z.string(),
-  bookImage: z.any(),
-  authorId: z.string().optional(),
+const AddAuthorSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  biography: z.string(),
+  authorImage: z.any(),
+  bookIds: z.string().array().optional(),
 });
 
-export default function AddBookDialog() {
+export default function AddAuthorDialog() {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedAuthor, setSelectedAuthor] = useState<string>(
-    "00000000-0000-0000-0000-000000000000"
-  );
+  const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const queryClient = useQueryClient();
-  // Fetch authors using the hook
-  const {
-    data,
-    isLoading: authorsLoading,
-    isError,
-    error,
-  } = useGetAllAuthors();
+  const { data, isLoading: booksLoading, isError, error } = useGetAllBooks();
 
-  const form = useForm<z.infer<typeof AddBookSchema>>({
-    resolver: zodResolver(AddBookSchema),
+  const form = useForm<z.infer<typeof AddAuthorSchema>>({
+    resolver: zodResolver(AddAuthorSchema),
     defaultValues: {
-      title: "",
-      description: "",
-      summary: "",
-      bookImage: undefined,
-      authorId: "00000000-0000-0000-0000-000000000000",
+      name: "",
+      biography: "",
+      authorImage: null,
+      bookIds: [],
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof AddBookSchema>) => {
+  const toggleBookSelection = (bookId: string) => {
+    setSelectedBooks((prev) =>
+      prev.includes(bookId)
+        ? prev.filter((id) => id !== bookId)
+        : [...prev, bookId]
+    );
+  };
+
+  const onSubmit = async (values: z.infer<typeof AddAuthorSchema>) => {
     setIsLoading(true);
+
+    // Prepare FormData for the author creation
     const formData = new FormData();
-    formData.append("title", values.title);
-    formData.append("description", values.description);
-    formData.append("summary", values.summary);
-    formData.append("authorId", selectedAuthor); // Use selectedAuthor instead of form value
-    formData.append("bookImage", values.bookImage); // selectedFile is your file object
+    formData.append("name", values.name);
+    formData.append("biography", values.biography);
+    formData.append("authorImageUrl", values.authorImage);
+
     try {
+      // Step 1: Create the author
       const data = await postData(
-        "Book",
+        "Author",
         { body: formData },
         "multipart/form-data"
       );
+
       if (data.message.toLowerCase().includes("success")) {
-        queryClient.invalidateQueries({ queryKey: ["allBook"] });
-        toast.success("Book added successfully.");
+        queryClient.invalidateQueries({ queryKey: ["allAuthor"] });
+
+        // Step 2: Add books to the author using FormData
+        const bookFormData = new FormData();
+        selectedBooks.forEach((bookId) =>
+          bookFormData.append("BookIds", bookId)
+        );
+
+        const bookData = await putData(
+          `Author/${data.author.id}/add-books`,
+          { body: bookFormData }, // Pass FormData directly
+          "multipart/form-data" // Explicitly specify the content type
+        );
+
+        if (bookData.message.toLowerCase().includes("success")) {
+          queryClient.invalidateQueries({ queryKey: ["allAuthor"] });
+          queryClient.invalidateQueries({ queryKey: ["allBook"] });
+          queryClient.invalidateQueries({ queryKey: ["allReviews"] });
+          toast.success("Books added to author successfully.");
+        } else {
+          toast.error("Error adding books to the author.");
+        }
+
+        toast.success("Author added successfully.");
       } else {
-        toast.error("Failed to add book. Please try again.");
+        toast.error("Failed to add author. Please try again.");
       }
     } catch (error) {
-      console.error("Error adding book:", error);
-      toast.error("Failed to add book. Please try again.");
+      console.error("Error adding author:", error);
+      toast.error("Failed to add author.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (authorsLoading) return <div>Loading authors...</div>;
-  if (isError) return <div>Error loading authors: {error?.message}</div>;
+  if (booksLoading) return <div>Loading books...</div>;
+  if (isError) return <div>Error loading books: {error?.message}</div>;
 
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button className="bg-violet-600 text-foreground hover:bg-violet-800 w-full h-16">
-          Add Book
+          Add Author
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:min-w-[425px] max-w-[800px]">
         <DialogHeader>
-          <DialogTitle>Add Book</DialogTitle>
+          <DialogTitle>Add Author</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          Fill in the details below to add a new book.
+          Fill in the details below to add a new author.
         </DialogDescription>
         <Form {...form}>
           <form
@@ -131,12 +154,12 @@ export default function AddBookDialog() {
           >
             <FormField
               control={form.control}
-              name="title"
+              name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
+                  <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Book Title" {...field} />
+                    <Input placeholder="John Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,12 +167,12 @@ export default function AddBookDialog() {
             />
             <FormField
               control={form.control}
-              name="description"
+              name="biography"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Biography</FormLabel>
                   <FormControl>
-                    <Input placeholder="Book Description" {...field} />
+                    <Input placeholder="Author Biography" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,20 +180,7 @@ export default function AddBookDialog() {
             />
             <FormField
               control={form.control}
-              name="summary"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Summary</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Book Summary" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="bookImage"
+              name="authorImage"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Image</FormLabel>
@@ -202,15 +212,16 @@ export default function AddBookDialog() {
                   src={imagePreview}
                   alt="Image preview"
                   className="w-24 h-24 object-cover"
+                  loader={({ src }) => src}
                 />
               </div>
             )}
             <FormField
               control={form.control}
-              name="authorId"
-              render={({ field }) => (
+              name="bookIds"
+              render={() => (
                 <FormItem>
-                  <FormLabel>Author</FormLabel>
+                  <FormLabel>Books written by Author</FormLabel>
                   <FormControl>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -220,47 +231,36 @@ export default function AddBookDialog() {
                           aria-expanded={true}
                           className="w-[200px] justify-between"
                         >
-                          {selectedAuthor !==
-                          "00000000-0000-0000-0000-000000000000"
-                            ? data?.authors?.find(
-                                (author) => author.id === selectedAuthor
-                              )?.name
-                            : "Select Author..."}
+                          {selectedBooks.length
+                            ? `${selectedBooks.length} books selected`
+                            : "Select Books..."}
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-[200px] p-0">
                         <Command>
-                          <CommandInput placeholder="Search for an author..." />
+                          <CommandInput placeholder="Search for a book..." />
                           <CommandList>
-                            <CommandEmpty>No author found.</CommandEmpty>
+                            <CommandEmpty>No books found.</CommandEmpty>
                             <CommandGroup>
-                              {data?.authors?.map((author) => (
-                                <CommandItem
-                                  key={author.id}
-                                  value={author.id + "authorname" + author.name}
-                                  onSelect={(currentValue) => {
-                                    field.onChange(
-                                      currentValue.split("authorname")[0]
-                                    );
-                                    setSelectedAuthor(
-                                      currentValue === selectedAuthor
-                                        ? ""
-                                        : currentValue.split("authorname")[0]
-                                    );
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedAuthor === author.id
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {author.name}
-                                </CommandItem>
-                              ))}
+                              {data?.books
+                                ?.filter((b) => !b.author)
+                                .map((b) => (
+                                  <CommandItem
+                                    key={b.id}
+                                    onSelect={() => toggleBookSelection(b.id)}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        "mr-2 h-4 w-4",
+                                        selectedBooks.includes(b.id)
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                    {b.title}
+                                  </CommandItem>
+                                ))}
                             </CommandGroup>
                           </CommandList>
                         </Command>

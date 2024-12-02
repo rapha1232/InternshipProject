@@ -28,13 +28,19 @@ export default function BookCard({ book }: { book: BookDto }) {
             {book.title}
           </Link>
           <p className="text-muted-foreground">
-            Written by:{" "}
-            <Link
-              className="text-violet-600"
-              href={`/authors/${book.author.id}`}
-            >
-              {book.author.name}
-            </Link>
+            {book.author ? (
+              <>
+                <span>"Written by: "</span>
+                <Link
+                  className="text-violet-600"
+                  href={`/authors/${book.author.id}`}
+                >
+                  {book.author.name}
+                </Link>
+              </>
+            ) : (
+              "Author not found"
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm">

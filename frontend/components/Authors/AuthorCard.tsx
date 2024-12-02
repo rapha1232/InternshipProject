@@ -14,6 +14,7 @@ export default function AuthorCard({ author }: { author: AuthorDto }) {
           height={300}
           alt={`${author.name}`}
           className="rounded-t-lg object-cover w-full aspect-square transform transition-transform duration-300 ease-in-out group-hover:scale-110"
+          loader={({ src }) => src}
         />
       </Link>
       <CardContent className="p-4">

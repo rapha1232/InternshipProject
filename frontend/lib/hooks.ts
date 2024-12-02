@@ -56,7 +56,7 @@ export const useGetSingleAuthor = (authorId: string) =>
 export const useGetAllBooks = () =>
   useQuery({
     queryFn: async (): Promise<GetAllBooksResponse> => await getData("Book"),
-    queryKey: ["allBooks"],
+    queryKey: ["allBook"],
   });
 export const useGetAllPublishedBooks = () =>
   useQuery({
@@ -68,7 +68,7 @@ export const useGetAllAuthors = () =>
   useQuery({
     queryFn: async (): Promise<GetAllAuthorsResponse> =>
       await getData("Author"),
-    queryKey: ["allAuthors"],
+    queryKey: ["allAuthor"],
   });
 export const useGetAllReviews = () =>
   useQuery({
@@ -86,9 +86,13 @@ export const useAddToWishlist = (
 ) => {
   const { mutate: addToWishlist } = useMutation({
     mutationFn: async (): Promise<{ message: string; wishlistItem: any }> =>
-      await postData(`Wishlist`, {
-        body: { bookId, userId, read },
-      }),
+      await postData(
+        `Wishlist`,
+        {
+          body: { bookId, userId, read },
+        },
+        "application/json"
+      ),
     onSuccess,
     onError,
   });
@@ -154,7 +158,7 @@ export const usePostReview = (
       content: string;
       rating: number;
     }): Promise<{ message: string }> =>
-      await postData("Reviews", { body: values }),
+      await postData("Reviews", { body: values }, "application/json"),
     onSuccess,
     onError,
     onMutate,
@@ -173,7 +177,11 @@ export const useEditReview = (
       content: string;
       rating: number;
     }): Promise<{ message: string }> =>
-      await putData(`Reviews/${reviewId}`, { body: values }),
+      await putData(
+        `Reviews/${reviewId}`,
+        { body: values },
+        "application/json"
+      ),
     onSuccess,
     onError,
   });
@@ -205,7 +213,11 @@ export const useUpdateProfile = (
 ) => {
   const { mutate: updateProfile } = useMutation({
     mutationFn: async (values: { userName: string; email: string }) =>
-      await putData(`User/update/${userId}`, { body: values }),
+      await putData(
+        `User/update/${userId}`,
+        { body: values },
+        "application/json"
+      ),
     onMutate,
     onSuccess,
     onError,
@@ -253,7 +265,11 @@ export const useAddToFavorite = (
 ) => {
   const { mutate: addToFavorite } = useMutation({
     mutationFn: async (): Promise<{ message: string; favItem: any }> =>
-      await postData("Favorites", { body: { userId, bookId } }),
+      await postData(
+        "Favorites",
+        { body: { userId, bookId } },
+        "application/json"
+      ),
     onSuccess,
     onError,
   });
@@ -277,14 +293,12 @@ export const useRemoveFromFavorite = (
       const { favoriteItemId, bookId } = options;
 
       if (bookId) {
-        // Find the favorite item by bookId
         const favoriteItem = user.favorites.find((f) => f.bookId === bookId);
         if (!favoriteItem) {
           throw new Error("Item not found in favorites.");
         }
         return await deleteData(`Favorites/${favoriteItem.id}`);
       } else if (favoriteItemId) {
-        // Use the provided favoriteItemId
         return await deleteData(`Favorites/${favoriteItemId}`);
       } else {
         throw new Error("Either bookId or favoriteItemId must be provided.");
@@ -351,9 +365,13 @@ export const useSetReadStatus = (onSuccess: onSuccess, onError: onError) => {
       id: string;
       read: boolean;
     }): Promise<{ message: string }> =>
-      await putData(`Wishlist/setReadStatus/${id}`, {
-        body: read,
-      }),
+      await putData(
+        `Wishlist/setReadStatus/${id}`,
+        {
+          body: read,
+        },
+        "application/json"
+      ),
     onSuccess,
     onError,
   });
@@ -373,7 +391,11 @@ export const useChangePassword = (
       newPassword: string;
       confirmPassword: string;
     }): Promise<{ message: string }> =>
-      await putData(`User/change-password/${userId}`, { body: values }),
+      await putData(
+        `User/change-password/${userId}`,
+        { body: values },
+        "application/json"
+      ),
     onMutate,
     onSuccess,
     onError,
@@ -389,7 +411,11 @@ export const useResetPasswordRequest = (
 ) => {
   const { mutate: resetPasswordRequest } = useMutation({
     mutationFn: async (email: string): Promise<{ message: string }> =>
-      await postData("User/generate-reset-token", { body: { email } }),
+      await postData(
+        "User/generate-reset-token",
+        { body: { email } },
+        "application/json"
+      ),
     onMutate,
     onSuccess,
     onError,

@@ -7,6 +7,6 @@ namespace InternshipBackend.Models.Dtos
     {
         public required string Name { get; set; }
         public string? Biography { get; set; }
-        public string? AuthorImageUrl { get; set; }
+        public IFormFile? AuthorImageUrl { get; set; }
     }
 }

@@ -8,7 +8,7 @@ export const filterBooks = (
   return books.filter((book) => {
     const matchesSearch =
       book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      book.author.name.toLowerCase().includes(searchQuery.toLowerCase());
+      book.author?.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesRating = !ratingFilter
       ? true

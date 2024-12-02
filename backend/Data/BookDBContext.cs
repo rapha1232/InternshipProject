@@ -17,15 +17,22 @@ public class BookDBContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        // Author and Books relationship
         modelBuilder.Entity<Author>()
-            .HasMany(a => a.Books)        // An Author has many Books
-            .WithOne(b => b.Author)       // Each Book has one Author
-            .HasForeignKey(b => b.AuthorId); // Set AuthorId as the foreign key
+            .HasMany(a => a.Books)
+            .WithOne(b => b.Author)
+            .HasForeignKey(b => b.AuthorId)
+            .OnDelete(DeleteBehavior.SetNull); // If an Author is deleted, set Book.AuthorId to NULL
 
+        // Book and Reviews relationship
         modelBuilder.Entity<Book>()
-            .HasMany(b => b.Reviews)      // A Book has many Reviews
-            .WithOne(r => r.Book)         // Each Review has one Book
-            .HasForeignKey(r => r.BookId); // Set BookId as the foreign key
+            .HasMany(b => b.Reviews)
+            .WithOne(r => r.Book)
+            .HasForeignKey(r => r.BookId).OnDelete(DeleteBehavior.Cascade);
 
+        // Ensure AuthorId is nullable
+        modelBuilder.Entity<Book>()
+            .Property(b => b.AuthorId)
+            .IsRequired(false);
     }
 }

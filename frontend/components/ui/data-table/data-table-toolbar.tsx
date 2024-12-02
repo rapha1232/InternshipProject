@@ -23,12 +23,14 @@ interface DataTableToolbarProps<TData> {
       icon?: ComponentType<{ className?: string | undefined }> | undefined;
     }[];
   }[];
+  tableName: string;
 }
 
 export function DataTableToolbar<TData>({
   table,
   search,
   filters,
+  tableName,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0;
 
@@ -68,7 +70,7 @@ export function DataTableToolbar<TData>({
         )}
       </div>
       {(table.getIsSomeRowsSelected() || table.getIsAllRowsSelected()) && (
-        <DelBtn table={table} />
+        <DelBtn table={table} tableName={tableName} />
       )}
       <DataTableViewOptions table={table} />
     </div>

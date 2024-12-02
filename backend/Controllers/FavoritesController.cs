@@ -71,7 +71,7 @@ namespace InternshipBacked.Controllers
 
             var favItemRes = _mapper.Map<FavoriteWithoutUserDto>(favItem);
 
-            return Ok(new { message = "Book added to favorites", favItem = favItemRes });
+            return Ok(new { message = "success Book added to favorites", favItem = favItemRes });
         }
 
         [HttpDelete("{favsItemId:Guid}")]
@@ -94,7 +94,7 @@ namespace InternshipBacked.Controllers
 
             var favItemRes = _mapper.Map<FavoriteWithoutUserDto>(favItem);
 
-            return Ok(new { message = "Favorites item removed", favItem = favItemRes });
+            return Ok(new { message = "success Favorites item removed", favItem = favItemRes });
         }
     }
 }

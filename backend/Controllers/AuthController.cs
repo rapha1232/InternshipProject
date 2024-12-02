@@ -52,7 +52,7 @@ namespace InternshipBacked.Controllers
 
                     if (res.Succeeded)
                     {
-                        return Ok(new { message = "User was registered! Please Login!!" });
+                        return Ok(new { message = "success User was registered! Please Login!!" });
                     }
                 }
             }

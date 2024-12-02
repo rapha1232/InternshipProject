@@ -26,17 +26,13 @@ async function refreshAccessToken(): Promise<boolean> {
         expires: 7,
         sameSite: "strict",
       });
-      console.log("✅ Token refreshed successfully 👾");
       return true;
     } else {
       const data = await response.json();
-      console.log(data);
-      console.error("🔴 Error refreshing token:", data.message);
       toast.error("🔴 Error refreshing token " + data.message);
       return false;
     }
   } catch (error) {
-    console.error("🔴 Error refreshing token:", error);
     toast.error("🔴 Error refreshing token " + error);
     return false;
   }
@@ -110,18 +106,30 @@ export async function loginUser(data: LoginDto) {
   return response;
 }
 
-export async function putData(url: string, opts: { body: any }) {
+export async function putData(
+  url: string,
+  opts: { body: any },
+  contentType?: string
+) {
   let accessToken = Cookies.get("jwtToken");
-  const options = {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: "",
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${accessToken}`,
   };
-  if (opts.body !== undefined || opts.body !== null)
-    options.body = JSON.stringify(opts.body);
+
+  // Only set Content-Type if it's not multipart/form-data
+  if (contentType && contentType !== "multipart/form-data") {
+    headers["Content-Type"] = contentType;
+  }
+
+  const options: RequestInit = {
+    method: "PUT",
+    headers,
+    body:
+      contentType && contentType !== "multipart/form-data"
+        ? JSON.stringify(opts.body)
+        : opts.body,
+  };
+
   let response = await fetch(`${api_endpoint}${url}`, options);
 
   if (response.status === 401) {
@@ -188,7 +196,10 @@ export async function postData(
   const options: RequestInit = {
     method: "POST",
     headers,
-    body: opts.body,
+    body:
+      contentType && contentType !== "multipart/form-data"
+        ? JSON.stringify(opts.body)
+        : opts.body,
   };
 
   let response = await fetch(`${api_endpoint}${url}`, options);

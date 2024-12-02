@@ -63,7 +63,7 @@ namespace InternshipBacked.Controllers
                 return NotFound(new { message = "Book has no reviews" });
             }
 
-            return Ok(new { message = "Success", reviews });
+            return Ok(new { message = "success", reviews });
         }
 
         [HttpPost]

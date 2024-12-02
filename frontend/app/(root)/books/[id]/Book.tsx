@@ -155,7 +155,7 @@ const BookShowcase = ({
       setUser(updatedUser);
       toast.success(data.message);
     },
-    () => toast.error("Failed to remove from favorites")
+    (error) => toast.error("Failed to remove from favorites" + error.message)
   );
 
   return (
@@ -168,7 +168,7 @@ const BookShowcase = ({
             src={book.bookImageUrl || ""}
             alt={book.title || ""}
             className="rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300 ease-in-out"
-            loader={({ src }) => src} // Add this line
+            loader={({ src }) => src}
           />
           {read && (
             <div className="absolute top-2 right-2 bg-green-700 text-white text-sm md:text-lg px-2 py-1 rounded">
@@ -182,7 +182,7 @@ const BookShowcase = ({
             {book.title}
           </h1>
           <h2 className="text-lg md:text-xl font-medium text-white/90">
-            By <span className="italic">{book.author.name}</span>
+            By <span className="italic">{book.author?.name || "N/A"}</span>
           </h2>
         </div>
 
@@ -190,7 +190,7 @@ const BookShowcase = ({
           <FavoriteButton
             inFavorites={inFavorites}
             addToFavorite={addToFavorite}
-            removeFromFavorite={removeFromFavorite}
+            removeFromFavorite={() => removeFromFavorite({ bookId: book.id })}
           />
           <WishlistButton
             inWishlist={inWishlist}

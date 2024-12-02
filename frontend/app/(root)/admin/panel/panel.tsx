@@ -1,9 +1,11 @@
 "use client";
 import { putData } from "@/api";
+import AddAuthorDialog from "@/components/CreateAuthorDialog";
 import CreateBookDialog from "@/components/CreateBookDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable } from "@/components/ui/data-table/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table/data-table-column-header";
+import { DataTableRowActions } from "@/components/ui/data-table/data-table-row-actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetUserName } from "@/lib/hooks";
 import { AuthorDto, BookDto, Review } from "@/types";
@@ -101,6 +103,15 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
       ),
     },
     {
+      accessorKey: "author",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Author" />
+      ),
+      cell: (info) => {
+        return info.row.original.author?.name || "N/A";
+      },
+    },
+    {
       accessorKey: "averageRating",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Avg Rating" />
@@ -115,13 +126,21 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
         return row.original.toBeShown === (filterValue[0] === "true");
       },
     },
+    {
+      id: "actions",
+      cell: ({ row }) => <DataTableRowActions row={row} />,
+    },
   ];
 
   const handlePublishedChange = async (id: string, value: boolean) => {
-    const data = await putData(`Book/show/${id}?toShow=${value}`, { body: "" });
+    const data = await putData(
+      `Book/show/${id}?toShow=${value}`,
+      { body: "" },
+      "application/json"
+    );
     if ((data.message as string).includes("success")) {
       toast.success(data.message);
-      queryClient.invalidateQueries({ queryKey: ["allBooks"] });
+      queryClient.invalidateQueries({ queryKey: ["allBook"] });
     } else toast.error(data.message);
   };
 
@@ -163,6 +182,10 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Biography" />
       ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => <DataTableRowActions row={row} />,
     },
   ];
 
@@ -239,13 +262,17 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
         " at " +
         info.row.original.reviewDate.split("T")[1].split(".")[0],
     },
+    {
+      id: "actions",
+      cell: ({ row }) => <DataTableRowActions row={row} />,
+    },
   ];
   return (
     <div className="flex flex-col mx-10">
       <h1 className="text-2xl font-semibold">Admin Panel</h1>
       <div className="mt-4">
         <h2 className="text-xl">Dashboard</h2>
-        <div className="flex gap-6 mt-4">
+        <div className="flex gap-6 mt-4 items-center">
           <div className="border p-4 rounded-lg">
             <h3 className="font-medium">Books</h3>
             <p>{booksData.length || 0}</p>
@@ -258,8 +285,11 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
             <h3 className="font-medium">Reviews</h3>
             <p>{reviewsData.length || 0}</p>
           </div>
-          <div className="border p-4 rounded-lg">
+          <div>
             <CreateBookDialog />
+          </div>
+          <div>
+            <AddAuthorDialog />
           </div>
         </div>
       </div>
@@ -276,6 +306,7 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
               data={booksData || []}
               columns={columnsForBooks}
               search="title"
+              tableName="Book"
               filters={[
                 {
                   title: "Published",
@@ -291,6 +322,7 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
               data={authorsData || []}
               columns={columnsForAuthors}
               search="name"
+              tableName="Author"
             />
           </TabsContent>
           <TabsContent value="reviews">
@@ -298,6 +330,7 @@ const Panel = ({ booksData, authorsData, reviewsData }: PanelProps) => {
               data={reviewsData || []}
               columns={columnsForReviews}
               search="content"
+              tableName="Reviews"
               filters={[
                 { title: "Rating", value: "rating", options: ratingOptions },
                 {

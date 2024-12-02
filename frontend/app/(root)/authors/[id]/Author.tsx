@@ -23,6 +23,7 @@ const Author = ({ id }: { id: string }) => {
             alt={author.name}
             layout="fill"
             objectFit="cover"
+            loader={({ src }) => src}
           />
         </div>
 
@@ -49,6 +50,7 @@ const Author = ({ id }: { id: string }) => {
                     width={200}
                     height={300}
                     className="rounded object-cover w-full h-48"
+                    loader={({ src }) => src}
                   />
                   <div className="mt-2">
                     <h3 className="text-lg font-semibold">{book.title}</h3>

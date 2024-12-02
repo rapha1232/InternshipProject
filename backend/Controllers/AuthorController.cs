@@ -6,6 +6,7 @@ using AutoMapper;
 using InternshipBackend.Models.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.VisualBasic;
+using InternshipBacked.Services;
 
 namespace InternshipBacked.Controllers
 {
@@ -17,10 +18,12 @@ namespace InternshipBacked.Controllers
 
         private readonly BookDBContext _context;
         private readonly IMapper _mapper;
-        public AuthorController(BookDBContext context, IMapper mapper)
+        private readonly IFileService _fileService;
+        public AuthorController(BookDBContext context, IMapper mapper, IFileService fileService)
         {
             _context = context;
             _mapper = mapper;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -76,11 +79,28 @@ namespace InternshipBacked.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateAuthor([FromBody] CreateAuthorRequestDto createAuthorDto)
+        public async Task<IActionResult> CreateAuthor([FromForm] CreateAuthorRequestDto createAuthorDto)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { message = "Invalid Model" });
+            }
             try
             {
-                var author = _mapper.Map<Author>(createAuthorDto);
+                if (createAuthorDto.AuthorImageUrl?.Length > 4 * 1024 * 1024)
+                {
+                    return BadRequest(new { message = "File size should not exceed 4 MB" });
+                }
+                string[] allowedFileExtentions = [".jpg", ".jpeg", ".png"];
+                string createdImageName = await _fileService.SaveFileAsync(createAuthorDto.AuthorImageUrl, allowedFileExtentions);
+
+                var author = new Author()
+                {
+                    Books = [],
+                    Name = createAuthorDto.Name,
+                    Biography = createAuthorDto.Biography,
+                    AuthorImageUrl = createdImageName,
+                };
 
                 await _context.Authors.AddAsync(author);
                 await _context.SaveChangesAsync();
@@ -141,6 +161,7 @@ namespace InternshipBacked.Controllers
             {
                 _context.Authors.Remove(author);
                 await _context.SaveChangesAsync();
+                if (!string.IsNullOrEmpty(author.AuthorImageUrl)) _fileService.DeleteFile(author.AuthorImageUrl.Split("/Uploads/")[1]);
             }
             catch (DbUpdateException ex)
             {
@@ -152,8 +173,9 @@ namespace InternshipBacked.Controllers
 
         [HttpPut]
         [Route("{authorId:Guid}/add-books")]
-        public async Task<IActionResult> AddBooksToAuthor([FromRoute] Guid authorId, [FromBody] List<Guid> bookIds)
+        public async Task<IActionResult> AddBooksToAuthor([FromRoute] Guid authorId, [FromForm] List<Guid> BookIds)
         {
+            Console.WriteLine(BookIds);
             var author = await _context.Authors.Include(a => a.Books).FirstOrDefaultAsync(a => a.Id == authorId);
 
             if (author == null)
@@ -161,14 +183,14 @@ namespace InternshipBacked.Controllers
                 return NotFound(new { message = "Author not found." });
             }
 
-            if (bookIds == null || !bookIds.Any())
+            if (BookIds == null || !BookIds.Any())
             {
                 return BadRequest(new { message = "No book IDs provided." });
             }
 
-            var books = await _context.Books.Where(b => bookIds.Contains(b.Id)).ToListAsync();
+            var books = await _context.Books.Where(b => BookIds.Contains(b.Id)).ToListAsync();
 
-            var missingBooks = bookIds.Except(books.Select(b => b.Id)).ToList();
+            var missingBooks = BookIds.Except(books.Select(b => b.Id)).ToList();
             if (missingBooks.Any())
             {
                 return NotFound(new { message = $"The following books were not found: {string.Join(", ", missingBooks)}" });
